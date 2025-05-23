@@ -54,7 +54,7 @@ def process_excel_file(excel_filepath):
             decimal_values.append(None) # Or some other indicator for invalid data
 
     # Create the list of tuples for column names and max bit widths
-    column_max_bit_widths_list = [(col, width) for col, width in column_bit_widths.items()]
+    column_max_bit_widths_list = [width for col, width in column_bit_widths.items()]
 
 
     return decimal_values, column_names, column_max_bit_widths_list
@@ -68,7 +68,6 @@ uploaded_file = st.file_uploader("Upload Excel file", type=["xlsx"])
 if uploaded_file:
     rows_values, cols, col_widths=process_excel_file(uploaded_file)
     rows_values = [int(x) for x in rows_values]
-    col_widths = [int(x) for x in col_widths]
     col_widths = [int(x) for x in col_widths]
     df = pd.read_excel(uploaded_file)
     st.write("Preview of Excel data:")
