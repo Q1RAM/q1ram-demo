@@ -194,13 +194,16 @@ if st.session_state.excel_data is not None:
 
 # Step 2: Encode classical data
 st.header("Step 2: Encode Classical Data")
-encode_disabled = st.session_state.step != 2
+encode_disabled = st.session_state.step != 2 or st.session_state.get("encode_loading", False)
 if st.button("Encode Data", disabled=encode_disabled):
-    try:
-        encode_data()
-        st.session_state.step = 3
-    except Exception as e:
-        st.error(f"Error during encoding: {e}")
+    st.session_state.encode_loading = True
+    with st.spinner("Encoding data..."):
+        try:
+            encode_data()
+            st.session_state.step = 3
+        except Exception as e:
+            st.error(f"Error during encoding: {e}")
+    st.session_state.encode_loading = False
 
 if st.session_state.encode_output is not None:
     counts, address_qubits, data_qubits, cols, col_widths = st.session_state.encode_output
@@ -209,10 +212,13 @@ if st.session_state.encode_output is not None:
 
 # Step 3: Write into QRAM
 st.header("Step 3: Write into QRAM")
-write_disabled = st.session_state.step != 3
+write_disabled = st.session_state.step != 3 or st.session_state.get("write_loading", False)
 if st.button("Write to QRAM", disabled=write_disabled):
-    write_qram()
-    st.session_state.step = 4
+    st.session_state.write_loading = True
+    with st.spinner("Writing to QRAM..."):
+        write_qram()
+        st.session_state.step = 4
+    st.session_state.write_loading = False
 
 if st.session_state.write_output is not None:
     counts, address_qubits, data_qubits, cols, col_widths = st.session_state.write_output
@@ -221,11 +227,9 @@ if st.session_state.write_output is not None:
 
 # Step 4: Read from QRAM
 st.header("Step 4: Read from QRAM")
-read_disabled = st.session_state.step != 4
+read_disabled = st.session_state.step != 4 or st.session_state.get("read_loading", False)
 
 row_count = len(st.session_state.rows_values) if st.session_state.rows_values else 0
-
-# Use a multiselect for address selection
 address_options = list(range(row_count))
 selected_addresses = st.multiselect(
     f"Select address(es) to read (0 to {row_count-1}). Leave empty to read all:",
@@ -234,9 +238,12 @@ selected_addresses = st.multiselect(
 )
 
 if st.button("Read from QRAM", disabled=read_disabled):
-    addresses = selected_addresses if selected_addresses else []
-    st.session_state.addresses = addresses
-    read_qram(addresses)
+    st.session_state.read_loading = True
+    with st.spinner("Reading from QRAM..."):
+        addresses = selected_addresses if selected_addresses else []
+        st.session_state.addresses = addresses
+        read_qram(addresses)
+    st.session_state.read_loading = False
 
 if st.session_state.read_output is not None:
     counts, address_qubits, data_qubits, cols, col_widths = st.session_state.read_output
