@@ -9,6 +9,7 @@ from Q1RAM import *
 from ClassicalQuantumGateway import *
 
 def plot_results_st(counts, fig_name, n, m, cols, col_widths):
+    st.write(counts)
     address_qubits = n
     data_qubits = m
     sorted_counts = dict(sorted(counts.items(), key=lambda item: int(item[0][-address_qubits:], 2)))
