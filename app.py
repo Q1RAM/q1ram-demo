@@ -27,8 +27,8 @@ def plot_results_st(counts, fig_name, n, m, cols, col_widths):
         x_labels.append(f"{address[-address_qubits:]}:({formatted_address_data})")
 
     # Create the plot
-    plt.figure(figsize=(12, 6))
-    bars = plt.bar(x_labels, counts_values)
+    fig, ax = plt.subplots(figsize=(12, 6))
+    bars = ax.bar(x_labels, counts_values)
 
     # Color bars with zero counts light gray
     for i, bar in enumerate(bars):
@@ -45,20 +45,15 @@ def plot_results_st(counts, fig_name, n, m, cols, col_widths):
 
     # Add legend
     light_gray_patch = plt.Rectangle((0, 0), 1, 1, fc="lightgray")
-    plt.legend([light_gray_patch], ["Empty cell value"])
+    ax.legend([light_gray_patch], ["Empty cell value"])
 
-    plt.xlabel(f"Address:({'- '.join(cols)})")
-    plt.ylabel("Counts")
-    plt.title("QRAM Read Results")
-    plt.xticks(rotation=90)
-    plt.tight_layout()
+    ax.set_xlabel(f"Address:({'- '.join(cols)})")
+    ax.set_ylabel("Counts")
+    ax.set_title("QRAM Read Results")
+    ax.set_xticklabels(x_labels, rotation=90)
+    fig.tight_layout()
 
-    # Save to buffer and return st.image
-    buf = io.BytesIO()
-    plt.savefig(buf, format="png")
-    plt.close()
-    buf.seek(0)
-    return st.image(buf, caption=fig_name)
+    return st.pyplot(fig)
 
 st.set_page_config(layout="wide") # Use wide layout for better space utilization
 
