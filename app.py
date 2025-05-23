@@ -1,10 +1,11 @@
 import streamlit as st
 from qiskit import QuantumCircuit
-from qiskit_aer import AerSimulator
 from qiskit.visualization import matplotlib as qiskit_matplotlib
 import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
+from ClassicalQuantumGateway import *
+from Q1RAM import *
 
 def plot_results_st(counts, n, m, cols, col_widths, bar_color='blue'):
     address_qubits = n
