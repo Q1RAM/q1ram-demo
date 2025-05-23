@@ -74,8 +74,8 @@ if uploaded_file:
     st.dataframe(df)
 
     # Step 2: Select columns to use as data
-    cols = st.multiselect("Select numeric columns to use as data", list(range(len(rows_values))))
-    if cols:
+    read_addresses=st.multiselect("Select numeric columns to use as data", list(range(len(rows_values))))
+    if read_addresses:
         try:
             # Step 3: Compute values for API
             # col_widths = [len(bin(int(df[c].max()))[2:]) for c in cols]
@@ -101,7 +101,7 @@ if uploaded_file:
             addresses = st.text_input("Optional: Read from specific address indices (comma-separated)", "")
             if st.button("Read from QRAM"):
                 try:
-                    address_list = list(map(int, addresses.split(","))) if addresses.strip() else []
+                    address_list = read_addresses
                     payload = payload_base.copy()
                     payload["addresses"] = address_list
                     res = requests.post(f"{API_URL}/read_qram/", json=payload)
