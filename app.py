@@ -178,26 +178,9 @@ st.button("Start Over", on_click=start_over, type="primary")
 
 # Step 1: Upload Excel
 st.header("Step 1: Upload Excel File")
-with st.container():
-    col1, col2 = st.columns([2, 1])
-    with col1:
-        uploaded_file = st.file_uploader("Choose an Excel file", type=["xlsx"], disabled=st.session_state.step > 1)
-        if uploaded_file is not None and st.session_state.step == 1:
-            temp_path = "uploaded_excel_temp.xlsx"
-            with open(temp_path, "wb") as f:
-                f.write(uploaded_file.getbuffer())
-            st.session_state.uploaded_file_path = temp_path
-            row_count = load_excel(temp_path)
-            st.success(f"Loaded {row_count} rows from Excel file.")
-            st.session_state.step = 2
-        if st.session_state.excel_data is not None:
-            st.write("Preview:", st.session_state.excel_data)
-    with col2:
-        st.caption("Step 1 code")
-        st.code(
-            '''
 uploaded_file = st.file_uploader("Choose an Excel file", type=["xlsx"], disabled=st.session_state.step > 1)
 if uploaded_file is not None and st.session_state.step == 1:
+    # Optionally save the uploaded file to disk for deletion later
     temp_path = "uploaded_excel_temp.xlsx"
     with open(temp_path, "wb") as f:
         f.write(uploaded_file.getbuffer())
@@ -205,106 +188,54 @@ if uploaded_file is not None and st.session_state.step == 1:
     row_count = load_excel(temp_path)
     st.success(f"Loaded {row_count} rows from Excel file.")
     st.session_state.step = 2
+
 if st.session_state.excel_data is not None:
     st.write("Preview:", st.session_state.excel_data)
-            ''', language="python"
-        )
 
 # Step 2: Encode classical data
 st.header("Step 2: Encode Classical Data")
-with st.container():
-    col1, col2 = st.columns([2, 1])
-    with col1:
-        encode_disabled = st.session_state.step != 2
-        if st.button("Encode Data", disabled=encode_disabled):
-            encode_data()
-            st.session_state.step = 3
-        if st.session_state.encode_output is not None:
-            counts, address_qubits, data_qubits, cols, col_widths = st.session_state.encode_output
-            st.subheader("Encoding Result")
-            plot_results_st(counts, address_qubits, data_qubits, cols, col_widths, bar_color='blue')
-    with col2:
-        st.caption("Step 2 code")
-        st.code(
-            '''
 encode_disabled = st.session_state.step != 2
 if st.button("Encode Data", disabled=encode_disabled):
     encode_data()
     st.session_state.step = 3
+
 if st.session_state.encode_output is not None:
     counts, address_qubits, data_qubits, cols, col_widths = st.session_state.encode_output
     st.subheader("Encoding Result")
     plot_results_st(counts, address_qubits, data_qubits, cols, col_widths, bar_color='blue')
-            ''', language="python"
-        )
 
 # Step 3: Write into QRAM
 st.header("Step 3: Write into QRAM")
-with st.container():
-    col1, col2 = st.columns([2, 1])
-    with col1:
-        write_disabled = st.session_state.step != 3
-        if st.button("Write to QRAM", disabled=write_disabled):
-            write_qram()
-            st.session_state.step = 4
-        if st.session_state.write_output is not None:
-            counts, address_qubits, data_qubits, cols, col_widths = st.session_state.write_output
-            st.subheader("Write Result")
-            plot_results_st(counts, address_qubits, data_qubits, cols, col_widths, bar_color='red')
-    with col2:
-        st.caption("Step 3 code")
-        st.code(
-            '''
 write_disabled = st.session_state.step != 3
 if st.button("Write to QRAM", disabled=write_disabled):
     write_qram()
     st.session_state.step = 4
+
 if st.session_state.write_output is not None:
     counts, address_qubits, data_qubits, cols, col_widths = st.session_state.write_output
     st.subheader("Write Result")
     plot_results_st(counts, address_qubits, data_qubits, cols, col_widths, bar_color='red')
-            ''', language="python"
-        )
 
 # Step 4: Read from QRAM
 st.header("Step 4: Read from QRAM")
-with st.container():
-    col1, col2 = st.columns([2, 1])
-    with col1:
-        read_disabled = st.session_state.step != 4
-        row_count = len(st.session_state.rows_values) if st.session_state.rows_values else 0
-        address_options = list(range(row_count))
-        selected_addresses = st.multiselect(
-            f"Select address(es) to read (0 to {row_count-1}). Leave empty to read all:",
-            options=address_options,
-            disabled=read_disabled
-        )
-        if st.button("Read from QRAM", disabled=read_disabled):
-            addresses = selected_addresses if selected_addresses else []
-            st.session_state.addresses = addresses
-            read_qram(addresses)
-        if st.session_state.read_output is not None:
-            counts, address_qubits, data_qubits, cols, col_widths = st.session_state.read_output
-            st.subheader("Read Result")
-            plot_results_st(counts, address_qubits, data_qubits, cols, col_widths, bar_color='green')
-    with col2:
-        st.caption("Step 4 code")
-        st.code(
-            '''
+read_disabled = st.session_state.step != 4
+
 row_count = len(st.session_state.rows_values) if st.session_state.rows_values else 0
+
+# Use a multiselect for address selection
 address_options = list(range(row_count))
 selected_addresses = st.multiselect(
     f"Select address(es) to read (0 to {row_count-1}). Leave empty to read all:",
     options=address_options,
     disabled=read_disabled
 )
+
 if st.button("Read from QRAM", disabled=read_disabled):
     addresses = selected_addresses if selected_addresses else []
     st.session_state.addresses = addresses
     read_qram(addresses)
+
 if st.session_state.read_output is not None:
     counts, address_qubits, data_qubits, cols, col_widths = st.session_state.read_output
     st.subheader("Read Result")
     plot_results_st(counts, address_qubits, data_qubits, cols, col_widths, bar_color='green')
-            ''', language="python"
-        )
