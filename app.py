@@ -3,6 +3,8 @@ from qiskit import QuantumCircuit
 from qiskit_aer import AerSimulator
 from qiskit.visualization import matplotlib as qiskit_matplotlib
 import matplotlib.pyplot as plt
+import pandas as pd
+import numpy as np
 
 def plot_results_st(counts, n, m, cols, col_widths, bar_color='blue'):
     address_qubits = n
