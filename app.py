@@ -6,6 +6,7 @@ import pandas as pd
 import numpy as np
 from ClassicalQuantumGateway import *
 from Q1RAM import *
+import os
 
 # --- Session State Initialization ---
 if "step" not in st.session_state:
@@ -158,6 +159,15 @@ def read_qram(addresses):
     st.session_state.read_output = (counts, address_qubits, data_qubits, cols, col_widths)
 
 def start_over():
+    # Delete the uploaded Excel file if it was saved to disk
+    if "uploaded_file_path" in st.session_state:
+        try:
+            if os.path.exists(st.session_state.uploaded_file_path):
+                os.remove(st.session_state.uploaded_file_path)
+        except Exception as e:
+            st.warning(f"Could not delete file: {e}")
+        del st.session_state["uploaded_file_path"]
+    # Clear all session state
     for key in list(st.session_state.keys()):
         del st.session_state[key]
     st.session_state.step = 1
@@ -170,9 +180,13 @@ st.button("Start Over", on_click=start_over, type="primary")
 st.header("Step 1: Upload Excel File")
 uploaded_file = st.file_uploader("Choose an Excel file", type=["xlsx"], disabled=st.session_state.step > 1)
 if uploaded_file is not None and st.session_state.step == 1:
-    row_count = load_excel(uploaded_file)
+    # Optionally save the uploaded file to disk for deletion later
+    temp_path = "uploaded_excel_temp.xlsx"
+    with open(temp_path, "wb") as f:
+        f.write(uploaded_file.getbuffer())
+    st.session_state.uploaded_file_path = temp_path
+    row_count = load_excel(temp_path)
     st.success(f"Loaded {row_count} rows from Excel file.")
-    # st.write("Preview:", st.session_state.excel_data.head())
     st.session_state.step = 2
 
 if st.session_state.excel_data is not None:
@@ -188,7 +202,7 @@ if st.button("Encode Data", disabled=encode_disabled):
 if st.session_state.encode_output is not None:
     counts, address_qubits, data_qubits, cols, col_widths = st.session_state.encode_output
     st.subheader("Encoding Result")
-    plot_results_st(counts, address_qubits, data_qubits, cols, col_widths, bar_color='red')
+    plot_results_st(counts, address_qubits, data_qubits, cols, col_widths, bar_color='blue')
 
 # Step 3: Write into QRAM
 st.header("Step 3: Write into QRAM")
@@ -200,7 +214,7 @@ if st.button("Write to QRAM", disabled=write_disabled):
 if st.session_state.write_output is not None:
     counts, address_qubits, data_qubits, cols, col_widths = st.session_state.write_output
     st.subheader("Write Result")
-    plot_results_st(counts, address_qubits, data_qubits, cols, col_widths, bar_color='green')
+    plot_results_st(counts, address_qubits, data_qubits, cols, col_widths, bar_color='red')
 
 # Step 4: Read from QRAM
 st.header("Step 4: Read from QRAM")
@@ -224,4 +238,4 @@ if st.button("Read from QRAM", disabled=read_disabled):
 if st.session_state.read_output is not None:
     counts, address_qubits, data_qubits, cols, col_widths = st.session_state.read_output
     st.subheader("Read Result")
-    plot_results_st(counts, address_qubits, data_qubits, cols, col_widths, bar_color='blue')
+    plot_results_st(counts, address_qubits, data_qubits, cols, col_widths, bar_color='green')
