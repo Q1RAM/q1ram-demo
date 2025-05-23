@@ -150,11 +150,11 @@ uploaded_file = st.file_uploader("Choose an Excel file", type=["xlsx"], disabled
 if uploaded_file is not None and st.session_state.step == 1:
     row_count = load_excel(uploaded_file)
     st.success(f"Loaded {row_count} rows from Excel file.")
-    st.write("Preview:", st.session_state.excel_data.head())
+    # st.write("Preview:", st.session_state.excel_data.head())
     st.session_state.step = 2
 
 if st.session_state.excel_data is not None:
-    st.write("Preview:", st.session_state.excel_data.head())
+    st.write("Preview:", st.session_state.excel_data)
 
 # Step 2: Encode classical data
 st.header("Step 2: Encode Classical Data")
@@ -183,16 +183,19 @@ if st.session_state.write_output is not None:
 # Step 4: Read from QRAM
 st.header("Step 4: Read from QRAM")
 read_disabled = st.session_state.step != 4
-address_input = st.text_input("Enter addresses to read (comma-separated, leave blank to read all):", disabled=read_disabled)
+
+row_count = len(st.session_state.rows_values) if st.session_state.rows_values else 0
+
+# Use a multiselect for address selection
+address_options = list(range(row_count))
+selected_addresses = st.multiselect(
+    f"Select address(es) to read (0 to {row_count-1}). Leave empty to read all:",
+    options=address_options,
+    disabled=read_disabled
+)
+
 if st.button("Read from QRAM", disabled=read_disabled):
-    if address_input.strip():
-        try:
-            addresses = [int(addr.strip()) for addr in address_input.split(",")]
-        except Exception:
-            st.error("Invalid address input. Please enter comma-separated integers.")
-            addresses = []
-    else:
-        addresses = []
+    addresses = selected_addresses if selected_addresses else []
     st.session_state.addresses = addresses
     read_qram(addresses)
 
