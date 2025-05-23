@@ -196,8 +196,11 @@ if st.session_state.excel_data is not None:
 st.header("Step 2: Encode Classical Data")
 encode_disabled = st.session_state.step != 2
 if st.button("Encode Data", disabled=encode_disabled):
-    encode_data()
-    st.session_state.step = 3
+    try:
+        encode_data()
+        st.session_state.step = 3
+    except Exception as e:
+        st.error(f"Error during encoding: {e}")
 
 if st.session_state.encode_output is not None:
     counts, address_qubits, data_qubits, cols, col_widths = st.session_state.encode_output
