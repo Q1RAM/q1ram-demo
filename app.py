@@ -147,3 +147,39 @@ def read_qram(addresses):
     counts=simulate_circuit(qc)
     plot_results_st(counts,address_qubits,data_qubits,cols,col_widths,bar_color='green')
     
+# Streamlit UI for sequential steps
+st.title("Quantum RAM Demo")
+
+# Step 1: Upload Excel
+st.header("Step 1: Upload Excel File")
+uploaded_file = st.file_uploader("Choose an Excel file", type=["xlsx"])
+if uploaded_file is not None:
+    row_count = load_excel(uploaded_file)
+    st.success(f"Loaded {row_count} rows from Excel file.")
+    st.write("Preview:", pd.read_excel(uploaded_file).head())
+
+    # Step 2: Encode classical data
+    st.header("Step 2: Encode Classical Data")
+    if st.button("Encode Data"):
+        encode_data()
+
+    # Step 3: Write into QRAM
+    st.header("Step 3: Write into QRAM")
+    if st.button("Write to QRAM"):
+        write_qram()
+
+    # Step 4: Read from QRAM
+    st.header("Step 4: Read from QRAM")
+    address_input = st.text_input("Enter addresses to read (comma-separated, leave blank to read all):")
+    if st.button("Read from QRAM"):
+        if address_input.strip():
+            try:
+                addresses = [int(addr.strip()) for addr in address_input.split(",")]
+            except Exception:
+                st.error("Invalid address input. Please enter comma-separated integers.")
+                addresses = []
+        else:
+            addresses = []
+        read_qram(addresses)
+else:
+    st.info("Please upload an Excel file to begin.")
