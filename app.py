@@ -1,217 +1,124 @@
 import streamlit as st
-import pandas as pd
+import platform
 import os
-import glob
-import numpy as np # Added for np.ceil, np.log2, np.max, np.astype
-from Q1RAM import *
-from ClassicalQuantumGateway import *
+import psutil
+import datetime
 
-# --- Streamlit Application ---
+st.set_page_config(
+    page_title="Streamlit Server Info",
+    page_icon="💻",
+    layout="wide",
+)
 
-st.set_page_config(layout="wide") # Use wide layout for better space utilization
+st.title("Server System Information (Streamlit Cloud)")
+st.write("This app displays information about the server where it's hosted.")
 
-# Initialize session state for persistence
-if 'data_properties' not in st.session_state:
-    st.session_state.data_properties = {
-        "excel_data": None,
-        "rows_values": [],
-        "cols": [],
-        "col_widths": []
-    }
-if 'show_step2' not in st.session_state:
-    st.session_state.show_step2 = False
-if 'show_step3' not in st.session_state:
-    st.session_state.show_step3 = False
-if 'show_step4' not in st.session_state:
-    st.session_state.show_step4 = False
-if 'encoding_image' not in st.session_state:
-    st.session_state.encoding_image = None
-if 'write_image' not in st.session_state:
-    st.session_state.write_image = None
-if 'read_image' not in st.session_state:
-    st.session_state.read_image = None
-if 'address_choices' not in st.session_state:
-    st.session_state.address_choices = []
+# --- Basic Platform Information ---
+st.header("1. Basic Platform Info")
+st.code(f"""
+System: {platform.system()}
+Node Name: {platform.node()}
+Release: {platform.release()}
+Version: {platform.version()}
+Machine: {platform.machine()}
+Processor: {platform.processor()}
+Python Version: {platform.python_version()}
+""")
 
+# --- CPU Information ---
+st.header("2. CPU Information")
+st.write(f"Physical cores: {psutil.cpu_count(logical=False)}")
+st.write(f"Total cores (logical): {psutil.cpu_count(logical=True)}")
 
-def remove_results():
-    directory = './'
-    pattern = os.path.join(directory, '*result*.png')
-    for file_path in glob.glob(pattern):
-        try:
-            os.remove(file_path)
-            # print(f"Deleted: {file_path}") # Don't print in Streamlit on every rerun
-        except Exception as e:
-            st.warning(f"Error deleting {file_path}: {e}") # Use st.warning for Streamlit
+st.subheader("CPU Frequencies")
+cpu_freq = psutil.cpu_freq()
+if cpu_freq:
+    st.write(f"Max Frequency: {cpu_freq.max:.2f} Mhz")
+    st.write(f"Min Frequency: {cpu_freq.min:.2f} Mhz")
+    st.write(f"Current Frequency: {cpu_freq.current:.2f} Mhz")
+else:
+    st.write("Could not retrieve CPU frequencies.")
 
+st.subheader("CPU Usage")
+# A short interval might be needed for accuracy on first call
+cpu_percent = psutil.cpu_percent(interval=1)
+st.write(f"Total CPU Usage: {cpu_percent}%")
 
-# Step 1: Load Excel file
-st.header("### Step 1: Upload Excel File")
-upload_btn = st.file_uploader("Upload dataset .xlsx", type=['xlsx'])
+st.subheader("CPU Usage Per Core:")
+cpu_per_core = psutil.cpu_percent(percpu=True, interval=1)
+for i, percentage in enumerate(cpu_per_core):
+    st.write(f"Core {i}: {percentage}%")
 
-if upload_btn is not None:
-    # Save uploaded file temporarily to process it with pandas
-    file_path = os.path.join("./temp_upload", upload_btn.name)
-    os.makedirs("./temp_upload", exist_ok=True) # Ensure dir exists
-    with open(file_path, "wb") as f:
-        f.write(upload_btn.getbuffer())
+# --- Memory Information ---
+st.header("3. Memory Information")
+svmem = psutil.virtual_memory()
 
-    excel_data = pd.read_excel(file_path)
-    row_count = len(excel_data)
-    rows_values, cols, col_widths = process_excel_file(file_path)
-    remove_results() # Clear previous results on new upload
+def get_size(bytes, suffix="B"):
+    factor = 1024
+    for unit in ["", "K", "M", "G", "T", "P"]:
+        if bytes < factor:
+            return f"{bytes:.2f}{unit}{suffix}"
+        bytes /= factor
+    return f"{bytes:.2f}{suffix}" # Fallback for extremely large numbers
 
-    st.session_state.data_properties["excel_data"] = excel_data
-    st.session_state.data_properties["rows_values"] = rows_values
-    st.session_state.data_properties["cols"] = cols
-    st.session_state.data_properties["col_widths"] = col_widths
-    st.session_state.address_choices = list(range(row_count))
-    
-    st.session_state.show_step2 = True # Show next steps
-    st.session_state.show_step3 = False # Hide subsequent steps on new upload
-    st.session_state.show_step4 = False
-    
-    st.subheader("Loaded Excel Data")
-    st.dataframe(excel_data, use_container_width=True)
-    st.code("classical_data = pd.read_excel(...)", language="python")
+st.write(f"Total: {get_size(svmem.total)}")
+st.write(f"Available: {get_size(svmem.available)}")
+st.write(f"Used: {get_size(svmem.used)}")
+st.write(f"Percentage: {svmem.percent}%")
 
+st.subheader("Swap Memory")
+swap = psutil.swap_memory()
+st.write(f"Total: {get_size(swap.total)}")
+st.write(f"Free: {get_size(swap.free)}")
+st.write(f"Used: {get_size(swap.used)}")
+st.write(f"Percentage: {swap.percent}%")
 
-# Step 2: Classical to Quantum Encoding
-if st.session_state.show_step2:
-    st.header("### Step 2: Classical to Quantum Encoding")
-    col1_s2, col2_s2 = st.columns([1, 2])
-    with col1_s2:
-        st.code("encode_classical_data_in_superposition(excel_file)", language="python")
-        if st.button("Execute Encoding"):
-            # Call your encoding function
-            excel_data = st.session_state.data_properties["excel_data"]
-            rows_values = st.session_state.data_properties["rows_values"]
-            cols = st.session_state.data_properties["cols"]
-            col_widths = st.session_state.data_properties["col_widths"]
+# --- Disk Usage ---
+st.header("4. Disk Usage")
+# Get disk partitions
+partitions = psutil.disk_partitions()
+for partition in partitions:
+    st.subheader(f"Device: {partition.device}")
+    st.write(f"Mountpoint: {partition.mountpoint}")
+    st.write(f"File system type: {partition.fstype}")
+    try:
+        partition_usage = psutil.disk_usage(partition.mountpoint)
+        st.write(f"Total Size: {get_size(partition_usage.total)}")
+        st.write(f"Used: {get_size(partition_usage.used)}")
+        st.write(f"Free: {get_size(partition_usage.free)}")
+        st.write(f"Percentage: {partition_usage.percent}%")
+    except PermissionError:
+        st.write("Permission denied to access this partition.")
 
-            address_qubits = np.ceil(np.log2(len(rows_values))).astype(int)
-            data_qubits = np.ceil(np.log2(np.max(rows_values))).astype(int)
-            classical_data = list(zip(range(len(rows_values)), rows_values))
-            qc = QuantumCircuit()
-            qr_AR, qr_DR, qr_Ar, qr_Cd, cb1, cb2, qr_tof_ancillae = encode_classical_data(qc, classical_data)
-            
-            cr_address = ClassicalRegister(address_qubits, name='cr_address') # Added name
-            cr_data = ClassicalRegister(data_qubits, name='cr_data') # Added name
-            cr_read_flag = ClassicalRegister(1, name='cr_read_flag') # Added name
-            qc.add_register(cr_address, cr_data, cr_read_flag)
-            qc.measure(qr_AR, cr_address)
-            qc.measure(qr_DR, cr_data)
-            
-            counts = simulate_circuit(qc)
-            plot_results(counts, "encode_data_result.png", address_qubits, data_qubits, cols, col_widths)
-            st.session_state.encoding_image = "encode_data_result.png"
-            st.session_state.show_step3 = True # Show next step
-            st.session_state.show_step4 = False # Hide subsequent steps
-            st.experimental_rerun() # Rerun to update visibility
+# --- Network Information (Interfaces and IP Addresses) ---
+st.header("5. Network Information")
+if_addrs = psutil.net_if_addrs()
+for interface_name, interface_addresses in if_addrs.items():
+    st.subheader(f"Interface: {interface_name}")
+    for address in interface_addresses:
+        if str(address.family) == 'AddressFamily.AF_INET': # IPv4
+            st.write(f"  IP Address: {address.address}")
+            st.write(f"  Netmask: {address.netmask}")
+            st.write(f"  Broadcast IP: {address.broadcast}")
+        elif str(address.family) == 'AddressFamily.AF_PACKET': # MAC address
+            st.write(f"  MAC Address: {address.address}")
+        # Add more address families if needed (e.g., AF_INET6 for IPv6)
 
-    with col2_s2:
-        if st.session_state.encoding_image:
-            st.image(st.session_state.encoding_image, caption="Encoding Result")
+# --- Boot Time ---
+st.header("6. Boot Time")
+boot_time_timestamp = psutil.boot_time()
+bt = datetime.datetime.fromtimestamp(boot_time_timestamp)
+st.write(f"Boot Time: {bt.year}/{bt.month}/{bt.day} {bt.hour}:{bt.minute}:{bt.second}")
 
-# Step 3: Write into QRAM
-if st.session_state.show_step3:
-    st.header("### Step 3: Write into QRAM")
-    col1_s3, col2_s3 = st.columns([1, 2])
-    with col1_s3:
-        st.code("qram.write()", language="python")
-        if st.button("Execute Writing"):
-            excel_data = st.session_state.data_properties["excel_data"]
-            rows_values = st.session_state.data_properties["rows_values"]
-            cols = st.session_state.data_properties["cols"]
-            col_widths = st.session_state.data_properties["col_widths"]
+st.header("7. Environment Variables")
+st.write("Some common environment variables:")
+st.code(f"""
+PATH: {os.environ.get('PATH', 'Not set')}
+HOME: {os.environ.get('HOME', 'Not set')}
+USER: {os.environ.get('USER', 'Not set')}
+LANG: {os.environ.get('LANG', 'Not set')}
+""")
+if st.checkbox("Show all environment variables (caution: may contain sensitive info)"):
+    st.json(dict(os.environ))
 
-            address_qubits = np.ceil(np.log2(len(rows_values))).astype(int)
-            data_qubits = np.ceil(np.log2(np.max(rows_values))).astype(int)
-            classical_data = list(zip(range(len(rows_values)), rows_values))
-            qc = QuantumCircuit()
-            qr_AR, qr_DR, qr_Ar, qr_Cd, cb1, cb2, qr_tof_ancillae = encode_classical_data(qc, classical_data)
-            qram = Q1RAM(address_qubits, data_qubits, qc=qc, qr_address_bus=qr_AR, qr_data_bus=qr_DR)
-            qram.apply_write()
-            qram.Measure_Internal_Data()
-
-            counts = simulate_circuit(qc)
-            plot_results(counts, "write_result.png", address_qubits, data_qubits, cols, col_widths)
-            st.session_state.write_image = "write_result.png"
-            st.session_state.show_step4 = True # Show next step
-            st.experimental_rerun() # Rerun to update visibility
-
-    with col2_s3:
-        if st.session_state.write_image:
-            st.image(st.session_state.write_image, caption="Write Result")
-
-# Step 4: Read Arbitrary Address(es)
-if st.session_state.show_step4:
-    st.header("### Step 4: Read Arbitrary Address(es)")
-    col1_s4, col2_s4 = st.columns([1, 2])
-    with col1_s4:
-        # CheckboxGroup in Streamlit requires initial options
-        selected_addresses = st.multiselect(
-            label="Select Address(es)",
-            options=st.session_state.address_choices,
-            default=[] # No addresses selected by default
-        )
-        st.code("qram.read()", language="python")
-        if st.button("Execute Reading"):
-            excel_data = st.session_state.data_properties["excel_data"]
-            rows_values = st.session_state.data_properties["rows_values"]
-            cols = st.session_state.data_properties["cols"]
-            col_widths = st.session_state.data_properties["col_widths"]
-
-            address_qubits = np.ceil(np.log2(len(rows_values))).astype(int)
-            data_qubits = np.ceil(np.log2(np.max(rows_values))).astype(int)
-            classical_data = list(zip(range(len(rows_values)), rows_values))
-            qc = QuantumCircuit()
-            qr_AR, qr_DR, qr_Ar, qr_Cd, cb1, cb2, qr_tof_ancillae = encode_classical_data(qc, classical_data)
-            qram = Q1RAM(address_qubits, data_qubits, qc=qc, qr_address_bus=qr_AR, qr_data_bus=qr_DR)
-            qram.apply_write()
-            
-            # Resetting registers as in original code
-            # Note: For mock QuantumCircuit, these resets might not do much visually
-            # but they keep the logic consistent with original.
-            qc.reset(qr_AR)
-            qc.reset(qr_DR)
-            qc.reset(qr_Ar)
-            qc.reset(qr_Cd)
-            qc.reset(cb1)
-            qc.reset(cb2)
-            qc.reset(qr_tof_ancillae)
-            
-            if len(selected_addresses) > 0:
-                qram.qc.prepare_state(indicies_to_statevector(selected_addresses), qr_AR)
-                qram.apply_read()
-            else:
-                qram.ReadAll()
-
-            qram.Measure()
-
-            counts = simulate_circuit(qc)
-            plot_results(counts, "read_result.png", address_qubits, data_qubits, cols, col_widths)
-            st.session_state.read_image = "read_result.png"
-            st.experimental_rerun() # Rerun to update image
-
-    with col2_s4:
-        if st.session_state.read_image:
-            st.image(st.session_state.read_image, caption="Read Result")
-
-    # Start Over button
-    if st.button("Start Over"):
-        remove_results()
-        st.session_state.show_step2 = False
-        st.session_state.show_step3 = False
-        st.session_state.show_step4 = False
-        st.session_state.data_properties = { # Reset data properties as well
-            "excel_data": None,
-            "rows_values": [],
-            "cols": [],
-            "col_widths": []
-        }
-        st.session_state.encoding_image = None
-        st.session_state.write_image = None
-        st.session_state.read_image = None
-        st.session_state.address_choices = []
-        st.experimental_rerun() # Rerun the entire app to reset
+st.info("Note: Streamlit Cloud allocates resources dynamically. The reported values are for the container your app is running in, and may not reflect the entire underlying physical server.")

@@ -1,4 +1,7 @@
-streamlit
 qiskit
 matplotlib
 openpyxl
+altair
+pandas
+streamlit
+psutil
