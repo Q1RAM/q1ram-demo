@@ -107,7 +107,7 @@ if st.session_state.show_step2:
             st.session_state.encoding_image = "encode_data_result.png"
             st.session_state.show_step3 = True # Show next step
             st.session_state.show_step4 = False # Hide subsequent steps
-            st.experimental_rerun() # Rerun to update visibility
+            st.rerun() # Rerun to update visibility
 
     with col2_s2:
         if st.session_state.encoding_image:
@@ -138,7 +138,7 @@ if st.session_state.show_step3:
             plot_results(counts, "write_result.png", address_qubits, data_qubits, cols, col_widths)
             st.session_state.write_image = "write_result.png"
             st.session_state.show_step4 = True # Show next step
-            st.experimental_rerun() # Rerun to update visibility
+            st.rerun() # Rerun to update visibility
 
     with col2_s3:
         if st.session_state.write_image:
@@ -192,7 +192,7 @@ if st.session_state.show_step4:
             counts = simulate_circuit(qc)
             plot_results(counts, "read_result.png", address_qubits, data_qubits, cols, col_widths)
             st.session_state.read_image = "read_result.png"
-            st.experimental_rerun() # Rerun to update image
+            st.rerun() # Rerun to update image
 
     with col2_s4:
         if st.session_state.read_image:
@@ -214,4 +214,4 @@ if st.session_state.show_step4:
         st.session_state.write_image = None
         st.session_state.read_image = None
         st.session_state.address_choices = []
-        st.experimental_rerun() # Rerun the entire app to reset
+        st.rerun() # Rerun the entire app to reset
