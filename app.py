@@ -92,7 +92,7 @@ if uploaded_file:
             # Step 4: Buttons
             if st.button("Encode Data"):
                 res = requests.post(f"{API_URL}/encode_data/", json=payload_base)
-                st.write("res:", res.json())
+                st.write("res:", res)
                 st.image(Image.open(BytesIO(res.content)), caption="Encoded Data")
 
             if st.button("Write to QRAM"):
