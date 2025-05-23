@@ -59,7 +59,7 @@ def process_excel_file(excel_filepath):
 
     return decimal_values, column_names, column_max_bit_widths_list
 
-API_URL = "https://huggingface.co/spaces/ahmed-eisa/q1ram_DK"  # Change if deploying
+API_URL = "https://huggingface.co/spaces/ahmed-eisa/q1ram_DK:7860"  # Change if deploying
 
 st.title("QRAM API Streamlit Frontend")
 
