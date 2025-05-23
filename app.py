@@ -1,5 +1,5 @@
 import streamlit as st
-from qiskit import QuantumCircuit
+from qiskit import QuantumCircuit, ClassicalRegister
 from qiskit.visualization import matplotlib as qiskit_matplotlib
 import matplotlib.pyplot as plt
 import pandas as pd
@@ -7,34 +7,49 @@ import numpy as np
 from ClassicalQuantumGateway import *
 from Q1RAM import *
 
+# --- Session State Initialization ---
+if "step" not in st.session_state:
+    st.session_state.step = 1
+if "excel_data" not in st.session_state:
+    st.session_state.excel_data = None
+if "rows_values" not in st.session_state:
+    st.session_state.rows_values = []
+if "cols" not in st.session_state:
+    st.session_state.cols = []
+if "col_widths" not in st.session_state:
+    st.session_state.col_widths = []
+if "encode_output" not in st.session_state:
+    st.session_state.encode_output = None
+if "write_output" not in st.session_state:
+    st.session_state.write_output = None
+if "read_output" not in st.session_state:
+    st.session_state.read_output = None
+if "addresses" not in st.session_state:
+    st.session_state.addresses = []
+
 def plot_results_st(counts, n, m, cols, col_widths, bar_color='blue'):
     address_qubits = n
     data_qubits = m
     sorted_counts = dict(sorted(counts.items(), key=lambda item: int(item[0][-address_qubits:], 2)))
 
-    # Prepare data for plotting
     address_values = []
     counts_values = []
     for address, count in sorted_counts.items():
         address_values.append(address)
         counts_values.append(count)
 
-    # Modify x labels
     x_labels = []
     for address in address_values:
         formatted_address_data = add_hyphens_to_bitstring(address[:data_qubits], col_widths)
         x_labels.append(f"{address[-address_qubits:]}:({formatted_address_data})")
 
-    # Create the plot
-    plt.figure(figsize=(12, 6))
-    bars = plt.bar(x_labels, counts_values, color=bar_color)
+    fig, ax = plt.subplots(figsize=(12, 6))
+    bars = ax.bar(x_labels, counts_values, color=bar_color)
 
-    # Color bars with zero counts light gray
     for i, bar in enumerate(bars):
         if counts_values[i] == 0:
             bar.set_color('lightgray')
 
-    # Identify and color repeated addresses
     address_counts = {}
     for address in address_values:
         address_counts[address[-address_qubits:]] = address_counts.get(address[-address_qubits:], 0) + 1
@@ -42,93 +57,67 @@ def plot_results_st(counts, n, m, cols, col_widths, bar_color='blue'):
         if address_counts[address_values[i][-address_qubits:]] > 1 and int(address_values[i][:data_qubits]) == 0:
             bar.set_color('lightgray')
 
-    # Add legend
     light_gray_patch = plt.Rectangle((0, 0), 1, 1, fc="lightgray")
-    plt.legend([light_gray_patch], ["Empty cell value"])
+    ax.legend([light_gray_patch], ["Empty cell value"])
 
-    plt.xlabel(f"Address:({'- '.join(cols)})")
-    plt.ylabel("Counts")
-    plt.title("QRAM Read Results")
-    plt.xticks(rotation=90)
-    plt.tight_layout()
+    ax.set_xlabel(f"Address:({'- '.join(cols)})")
+    ax.set_ylabel("Counts")
+    ax.set_title("QRAM Read Results")
+    ax.set_xticklabels(x_labels, rotation=90)
+    fig.tight_layout()
 
-    # Display plot in Streamlit
-    st.pyplot(plt.gcf())
-    plt.close()
+    st.pyplot(fig)
+    plt.close(fig)
 
-excel_data=[]
-rows_values=[]
-cols=[]
-col_widths=[]
-
-# Step 1: Load Excel file and return number of rows
 def load_excel(file):
-    global excel_data
-    global rows_values
-    global cols
-    global col_widths
+    st.session_state.excel_data = pd.read_excel(file)
+    row_count = len(st.session_state.excel_data)
+    st.session_state.rows_values, st.session_state.cols, st.session_state.col_widths = process_excel_file(file)
+    return row_count
 
-
-    excel_data = pd.read_excel(file)
-    row_count = len(excel_data)
-    rows_values, cols, col_widths = process_excel_file(file)
-    
-
-# Step 2: Encode classical data to superposition 
 def encode_data():
-    global excel_data
-    global rows_values
-    global cols
-    global col_widths
+    rows_values = st.session_state.rows_values
+    cols = st.session_state.cols
+    col_widths = st.session_state.col_widths
+    address_qubits = int(np.ceil(np.log2(len(rows_values))))
+    data_qubits = int(np.ceil(np.log2(np.max(rows_values))))
+    classical_data = list(zip(range(len(rows_values)), rows_values))
+    qc = QuantumCircuit()
+    qr_AR, qr_DR, qr_Ar, qr_Cd, cb1, cb2, qr_tof_ancillae = encode_classical_data(qc, classical_data)
+    cr_address = ClassicalRegister(address_qubits)
+    cr_data = ClassicalRegister(data_qubits)
+    cr_read_flag = ClassicalRegister(1)
+    qc.add_register(cr_address, cr_data)
+    qc.measure(qr_AR, cr_address)
+    qc.measure(qr_DR, cr_data)
+    counts = simulate_circuit(qc)
+    st.session_state.encode_output = (counts, address_qubits, data_qubits, cols, col_widths)
 
-    address_qubits= np.ceil(np.log2(len(rows_values))).astype(int)
-    data_qubits=np.ceil(np.log2(np.max(rows_values))).astype(int)
-    classical_data=list(zip(range(len(rows_values)),rows_values))
-    qc=QuantumCircuit()
-    qr_AR,qr_DR,qr_Ar,qr_Cd,cb1,cb2,qr_tof_ancillae=encode_classical_data(qc,classical_data)
-    cr_address=ClassicalRegister(address_qubits)
-    cr_data=ClassicalRegister(data_qubits)
-    cr_read_flag=ClassicalRegister(1)
-    qc.add_register(cr_address,cr_data)
-    qc.measure(qr_AR,cr_address)
-    qc.measure(qr_DR,cr_data)
-    counts=simulate_circuit(qc)
-    plot_results_st(counts,address_qubits,data_qubits,cols,col_widths,bar_color='red')
-    
-
-# Step 3: Write into QRAM 
 def write_qram():
-    global excel_data
-    global rows_values
-    global cols
-    global col_widths
-
-    address_qubits= np.ceil(np.log2(len(rows_values))).astype(int)
-    data_qubits=np.ceil(np.log2(np.max(rows_values))).astype(int)
-    classical_data=list(zip(range(len(rows_values)),rows_values))
-    qc=QuantumCircuit()
-    qr_AR,qr_DR,qr_Ar,qr_Cd,cb1,cb2,qr_tof_ancillae=encode_classical_data(qc,classical_data)
-    qram=Q1RAM(address_qubits,data_qubits,qc=qc,qr_address_bus=qr_AR,qr_data_bus=qr_DR)
+    rows_values = st.session_state.rows_values
+    cols = st.session_state.cols
+    col_widths = st.session_state.col_widths
+    address_qubits = int(np.ceil(np.log2(len(rows_values))))
+    data_qubits = int(np.ceil(np.log2(np.max(rows_values))))
+    classical_data = list(zip(range(len(rows_values)), rows_values))
+    qc = QuantumCircuit()
+    qr_AR, qr_DR, qr_Ar, qr_Cd, cb1, cb2, qr_tof_ancillae = encode_classical_data(qc, classical_data)
+    qram = Q1RAM(address_qubits, data_qubits, qc=qc, qr_address_bus=qr_AR, qr_data_bus=qr_DR)
     qram.apply_write()
     qram.Measure_Internal_Data()
+    counts = simulate_circuit(qc)
+    st.session_state.write_output = (counts, address_qubits, data_qubits, cols, col_widths)
 
-    counts=simulate_circuit(qc)
-    plot_results_st(counts,address_qubits,data_qubits,cols,col_widths,bar_color='green')
-    
-
-# Step 4: Read from QRAM 
 def read_qram(addresses):
-    global excel_data
-    global rows_values
-    global cols
-    global col_widths
-
-    address_qubits= np.ceil(np.log2(len(rows_values))).astype(int)
-    data_qubits=np.ceil(np.log2(np.max(rows_values))).astype(int)
-    classical_data=list(zip(range(len(rows_values)),rows_values))
-    qc=QuantumCircuit()
-    qr_AR,qr_DR,qr_Ar,qr_Cd,cb1,cb2,qr_tof_ancillae=encode_classical_data(qc,classical_data)
-    qram=Q1RAM(address_qubits,data_qubits,qc=qc,qr_address_bus=qr_AR,qr_data_bus=qr_DR)
+    rows_values = st.session_state.rows_values
+    cols = st.session_state.cols
+    col_widths = st.session_state.col_widths
+    address_qubits = int(np.ceil(np.log2(len(rows_values))))
+    data_qubits = int(np.ceil(np.log2(np.max(rows_values))))
+    classical_data = list(zip(range(len(rows_values)), rows_values))
+    qc = QuantumCircuit()
+    qr_AR, qr_DR, qr_Ar, qr_Cd, cb1, cb2, qr_tof_ancillae = encode_classical_data(qc, classical_data)
+    qram = Q1RAM(address_qubits, data_qubits, qc=qc, qr_address_bus=qr_AR, qr_data_bus=qr_DR)
     qram.apply_write()
     qram.qc.reset(qr_AR)
     qram.qc.reset(qr_DR)
@@ -137,52 +126,77 @@ def read_qram(addresses):
     qram.qc.reset(cb1)
     qram.qc.reset(cb2)
     qram.qc.reset(qr_tof_ancillae)
-    
-    if(len(addresses)>0):
-      qram.qc.prepare_state(indicies_to_statevector(addresses),qr_AR)
-    # qram.ReadAll()
-      qram.apply_read()
+    if len(addresses) > 0:
+        qram.qc.prepare_state(indicies_to_statevector(addresses), qr_AR)
+        qram.apply_read()
     else:
-      qram.ReadAll()
-
+        qram.ReadAll()
     qram.Measure()
+    counts = simulate_circuit(qc)
+    st.session_state.read_output = (counts, address_qubits, data_qubits, cols, col_widths)
 
-    counts=simulate_circuit(qc)
-    plot_results_st(counts,address_qubits,data_qubits,cols,col_widths,bar_color='green')
-    
-# Streamlit UI for sequential steps
+def start_over():
+    for key in list(st.session_state.keys()):
+        del st.session_state[key]
+    st.session_state.step = 1
+
 st.title("Quantum RAM Demo")
+
+st.button("Start Over", on_click=start_over, type="primary")
 
 # Step 1: Upload Excel
 st.header("Step 1: Upload Excel File")
-uploaded_file = st.file_uploader("Choose an Excel file", type=["xlsx"])
-if uploaded_file is not None:
+uploaded_file = st.file_uploader("Choose an Excel file", type=["xlsx"], disabled=st.session_state.step > 1)
+if uploaded_file is not None and st.session_state.step == 1:
     row_count = load_excel(uploaded_file)
     st.success(f"Loaded {row_count} rows from Excel file.")
-    st.write("Preview:", pd.read_excel(uploaded_file).head())
+    st.write("Preview:", st.session_state.excel_data.head())
+    st.session_state.step = 2
 
-    # Step 2: Encode classical data
-    st.header("Step 2: Encode Classical Data")
-    if st.button("Encode Data"):
-        encode_data()
+if st.session_state.excel_data is not None:
+    st.write("Preview:", st.session_state.excel_data.head())
 
-    # Step 3: Write into QRAM
-    st.header("Step 3: Write into QRAM")
-    if st.button("Write to QRAM"):
-        write_qram()
+# Step 2: Encode classical data
+st.header("Step 2: Encode Classical Data")
+encode_disabled = st.session_state.step != 2
+if st.button("Encode Data", disabled=encode_disabled):
+    encode_data()
+    st.session_state.step = 3
 
-    # Step 4: Read from QRAM
-    st.header("Step 4: Read from QRAM")
-    address_input = st.text_input("Enter addresses to read (comma-separated, leave blank to read all):")
-    if st.button("Read from QRAM"):
-        if address_input.strip():
-            try:
-                addresses = [int(addr.strip()) for addr in address_input.split(",")]
-            except Exception:
-                st.error("Invalid address input. Please enter comma-separated integers.")
-                addresses = []
-        else:
+if st.session_state.encode_output is not None:
+    counts, address_qubits, data_qubits, cols, col_widths = st.session_state.encode_output
+    st.subheader("Encoding Result")
+    plot_results_st(counts, address_qubits, data_qubits, cols, col_widths, bar_color='red')
+
+# Step 3: Write into QRAM
+st.header("Step 3: Write into QRAM")
+write_disabled = st.session_state.step != 3
+if st.button("Write to QRAM", disabled=write_disabled):
+    write_qram()
+    st.session_state.step = 4
+
+if st.session_state.write_output is not None:
+    counts, address_qubits, data_qubits, cols, col_widths = st.session_state.write_output
+    st.subheader("Write Result")
+    plot_results_st(counts, address_qubits, data_qubits, cols, col_widths, bar_color='green')
+
+# Step 4: Read from QRAM
+st.header("Step 4: Read from QRAM")
+read_disabled = st.session_state.step != 4
+address_input = st.text_input("Enter addresses to read (comma-separated, leave blank to read all):", disabled=read_disabled)
+if st.button("Read from QRAM", disabled=read_disabled):
+    if address_input.strip():
+        try:
+            addresses = [int(addr.strip()) for addr in address_input.split(",")]
+        except Exception:
+            st.error("Invalid address input. Please enter comma-separated integers.")
             addresses = []
-        read_qram(addresses)
-else:
-    st.info("Please upload an Excel file to begin.")
+    else:
+        addresses = []
+    st.session_state.addresses = addresses
+    read_qram(addresses)
+
+if st.session_state.read_output is not None:
+    counts, address_qubits, data_qubits, cols, col_widths = st.session_state.read_output
+    st.subheader("Read Result")
+    plot_results_st(counts, address_qubits, data_qubits, cols, col_widths, bar_color='blue')
