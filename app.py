@@ -75,6 +75,28 @@ def load_excel(file):
     st.session_state.rows_values, st.session_state.cols, st.session_state.col_widths = process_excel_file(file)
     return row_count
 
+def indicies_to_statevector_st(indicies):
+  n_max = max(indicies)
+  
+
+
+  n_bits = np.ceil(np.log2(len(st.session_state.rows_values))).astype(int)
+  
+  total_bits = n_bits 
+  state_vector_size = 2**total_bits
+  state_vector = np.zeros(state_vector_size, dtype=complex) # Use complex for state vectors
+
+  num_data_points = len(indicies)
+  amplitude = 1.0 / np.sqrt(num_data_points)
+
+  for index in indicies:
+    
+
+    # Assign amplitude to the corresponding index
+    state_vector[index] = amplitude
+
+  return state_vector
+
 def encode_data():
     rows_values = st.session_state.rows_values
     cols = st.session_state.cols
@@ -127,7 +149,7 @@ def read_qram(addresses):
     qram.qc.reset(cb2)
     qram.qc.reset(qr_tof_ancillae)
     if len(addresses) > 0:
-        qram.qc.prepare_state(indicies_to_statevector(addresses), qr_AR)
+        qram.qc.prepare_state(indicies_to_statevector_st(addresses), qr_AR)
         qram.apply_read()
     else:
         qram.ReadAll()
