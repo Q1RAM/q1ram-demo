@@ -6,3 +6,4 @@ pandas
 streamlit
 psutil
 nuitka
+qiskit-aer
