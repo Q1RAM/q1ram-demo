@@ -67,6 +67,8 @@ st.title("QRAM API Streamlit Frontend")
 uploaded_file = st.file_uploader("Upload Excel file", type=["xlsx"])
 if uploaded_file:
     rows_values, cols, col_widths=process_excel_file(uploaded_file)
+    rows_values = [int(x) for x in rows_values]
+    col_widths = [int(x) for x in col_widths]
     df = pd.read_excel(uploaded_file)
     st.write("Preview of Excel data:")
     st.dataframe(df)
