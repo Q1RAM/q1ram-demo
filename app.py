@@ -3,10 +3,61 @@ import pandas as pd
 import os
 import glob
 import numpy as np # Added for np.ceil, np.log2, np.max, np.astype
+import matplotlib.pyplot as plt
+import io
 from Q1RAM import *
 from ClassicalQuantumGateway import *
 
-# --- Streamlit Application ---
+def plot_results_st(counts, fig_name, n, m, cols, col_widths):
+    address_qubits = n
+    data_qubits = m
+    sorted_counts = dict(sorted(counts.items(), key=lambda item: int(item[0][-address_qubits:], 2)))
+    # Prepare data for plotting
+    address_values = []
+    counts_values = []
+    for address, count in sorted_counts.items():
+        address_values.append(address)
+        counts_values.append(count)
+
+    # Modify x labels
+    x_labels = []
+    for address in address_values:
+        formatted_address_data = add_hyphens_to_bitstring(address[:data_qubits], col_widths)
+        x_labels.append(f"{address[-address_qubits:]}:({formatted_address_data})")
+
+    # Create the plot
+    plt.figure(figsize=(12, 6))
+    bars = plt.bar(x_labels, counts_values)
+
+    # Color bars with zero counts light gray
+    for i, bar in enumerate(bars):
+        if counts_values[i] == 0:
+            bar.set_color('lightgray')
+
+    # Identify and color repeated addresses
+    address_counts = {}
+    for address in address_values:
+        address_counts[address[-address_qubits:]] = address_counts.get(address[-address_qubits:], 0) + 1
+    for i, bar in enumerate(bars):
+        if address_counts[address_values[i][-address_qubits:]] > 1 and int(address_values[i][:data_qubits]) == 0:
+            bar.set_color('lightgray')
+
+    # Add legend
+    light_gray_patch = plt.Rectangle((0, 0), 1, 1, fc="lightgray")
+    plt.legend([light_gray_patch], ["Empty cell value"])
+
+    plt.xlabel(f"Address:({'- '.join(cols)})")
+    plt.ylabel("Counts")
+    plt.title("QRAM Read Results")
+    plt.xticks(rotation=90)
+    plt.tight_layout()
+
+    # Save to buffer and return st.image
+    buf = io.BytesIO()
+    plt.savefig(buf, format="png")
+    plt.close()
+    buf.seek(0)
+    return st.image(buf, caption=fig_name)
 
 st.set_page_config(layout="wide") # Use wide layout for better space utilization
 
@@ -103,15 +154,14 @@ if st.session_state.show_step2:
             qc.measure(qr_DR, cr_data)
             
             counts = simulate_circuit(qc)
-            plot_results(counts, "encode_data_result.png", address_qubits, data_qubits, cols, col_widths)
-            st.session_state.encoding_image = "encode_data_result.png"
+            st.session_state.encoding_image = plot_results_st(counts, "Encoding Result", address_qubits, data_qubits, cols, col_widths)
             st.session_state.show_step3 = True # Show next step
             st.session_state.show_step4 = False # Hide subsequent steps
             st.rerun() # Rerun to update visibility
 
     with col2_s2:
         if st.session_state.encoding_image:
-            st.image(st.session_state.encoding_image, caption="Encoding Result")
+            st.session_state.encoding_image
 
 # Step 3: Write into QRAM
 if st.session_state.show_step3:
@@ -135,14 +185,13 @@ if st.session_state.show_step3:
             qram.Measure_Internal_Data()
 
             counts = simulate_circuit(qc)
-            plot_results(counts, "write_result.png", address_qubits, data_qubits, cols, col_widths)
-            st.session_state.write_image = "write_result.png"
+            st.session_state.write_image = plot_results_st(counts, "Write Result", address_qubits, data_qubits, cols, col_widths)
             st.session_state.show_step4 = True # Show next step
             st.rerun() # Rerun to update visibility
 
     with col2_s3:
         if st.session_state.write_image:
-            st.image(st.session_state.write_image, caption="Write Result")
+            st.session_state.write_image
 
 # Step 4: Read Arbitrary Address(es)
 if st.session_state.show_step4:
@@ -190,13 +239,12 @@ if st.session_state.show_step4:
             qram.Measure()
 
             counts = simulate_circuit(qc)
-            plot_results(counts, "read_result.png", address_qubits, data_qubits, cols, col_widths)
-            st.session_state.read_image = "read_result.png"
+            st.session_state.read_image = plot_results_st(counts, "Read Result", address_qubits, data_qubits, cols, col_widths)
             st.rerun() # Rerun to update image
 
     with col2_s4:
         if st.session_state.read_image:
-            st.image(st.session_state.read_image, caption="Read Result")
+            st.session_state.read_image
 
     # Start Over button
     if st.button("Start Over"):
