@@ -1,393 +1,217 @@
-# prompt: create a function the accepts an excel file , read it row by row,  concatenate the binary string of all column values in each row and convert it into decimal value, return array for all decimals, read  columns names ,skip the columns row from conversion, return also the column names and its max bit width in a tuble
-
-# !pip install openpyxl
-
+import streamlit as st
 import pandas as pd
-import numpy as np
-from qiskit import *
-from qiskit.circuit import Instruction
+import os
+import glob
+import numpy as np # Added for np.ceil, np.log2, np.max, np.astype
+from Q1RAM import *
+from ClassicalQuantumGateway import *
+
+# --- Streamlit Application ---
+
+st.set_page_config(layout="wide") # Use wide layout for better space utilization
+
+# Initialize session state for persistence
+if 'data_properties' not in st.session_state:
+    st.session_state.data_properties = {
+        "excel_data": None,
+        "rows_values": [],
+        "cols": [],
+        "col_widths": []
+    }
+if 'show_step2' not in st.session_state:
+    st.session_state.show_step2 = False
+if 'show_step3' not in st.session_state:
+    st.session_state.show_step3 = False
+if 'show_step4' not in st.session_state:
+    st.session_state.show_step4 = False
+if 'encoding_image' not in st.session_state:
+    st.session_state.encoding_image = None
+if 'write_image' not in st.session_state:
+    st.session_state.write_image = None
+if 'read_image' not in st.session_state:
+    st.session_state.read_image = None
+if 'address_choices' not in st.session_state:
+    st.session_state.address_choices = []
 
 
-def normalize_to_statevector(classical_data):
-  """
-  Converts a list of tuples into a normalized state vector.
-
-  Args:
-    classical_data: A list of tuples, where each tuple (a, b) represents a
-                    data point.
-
-  Returns:
-    np.array: A normalized state vector where the indices corresponding to
-              concatenated decimal values (a concatenated with b) are 1/sqrt(N)
-              and all other elements are 0. N is the number of data points.
-  """
-  n_max = 0
-  m_max = 0
-  for a, b in classical_data:
-    n_max = max(n_max, a)
-    m_max = max(m_max, b)
-
-  n_bits = np.ceil(np.log2(len(classical_data))).astype(int)
-  m_bits = np.ceil(np.log2(m_max + 1)).astype(int) # m_max + 1 because the max value b could be 0
-  total_bits = n_bits + m_bits
-  state_vector_size = 2**total_bits
-  state_vector = np.zeros(state_vector_size, dtype=np.float32) # Use complex for state vectors
-
-  num_data_points = len(classical_data)
-  amplitude = 1.0 / np.sqrt(num_data_points)
-
-  for i, (a, b) in enumerate(classical_data):
-    # Pad 'a' and 'b' with leading zeros to match bit widths
-    a_bin = bin(a)[2:].zfill(n_bits)
-    b_bin = bin(b)[2:].zfill(m_bits)
-
-    # Concatenate binary strings and convert back to decimal index
-    concatenated_bin = a_bin + b_bin
-    index = int(concatenated_bin, 2)
-
-    # Assign amplitude to the corresponding index
-    state_vector[index] = amplitude
-
-  return state_vector
-
-def indicies_to_statevector(indicies):
-  n_max = max(indicies)
-  
-
-
-  n_bits = np.ceil(np.log2(len(classical_data))).astype(int)
-  
-  total_bits = n_bits 
-  state_vector_size = 2**total_bits
-  state_vector = np.zeros(state_vector_size, dtype=complex) # Use complex for state vectors
-
-  num_data_points = len(indicies)
-  amplitude = 1.0 / np.sqrt(num_data_points)
-
-  for index in indicies:
-    
-
-    # Assign amplitude to the corresponding index
-    state_vector[index] = amplitude
-
-  return state_vector
-
-
-
-def Simplified_RTOF_Gate(num_controls:int,num_targets=1,clean_ancilla=True)->Instruction:
-    qc= QuantumCircuit()
-    num_ancilla=num_controls//2-1
-    controls=QuantumRegister(num_controls,name="control")
-    ancilla=QuantumRegister(num_ancilla,name="ancilla")
-    target=QuantumRegister(num_targets,name="target")
-    # qc.add_register(controls)
-    # qc.add_register(ancilla)
-    # qc.add_register(target)
-
-    if(num_controls==3):
-      qc.add_register(controls)
-      qc.add_register(target)
-      qc.rcccx(controls[0],controls[1],controls[2],target)
-    elif(num_controls==2):
-      qc.add_register(controls)
-      qc.add_register(target)
-      qc.rccx(controls[0],controls[1],target)
-    else:
-      qc.add_register(controls)
-      qc.add_register(ancilla)
-      qc.add_register(target)
-      if(num_ancilla!=num_controls//2-1):
-          raise ValueError(f"Expected {num_controls//2-1} ancilla qubits, while {num_ancilla} is provided")
-
-      i=0
-      num_remaining_controls= num_controls
-      while (num_remaining_controls>0):
-          if(i==0):
-              # print(f"RTOF: c{i*2},c{i*2+1},c{i*2+2}-->a{i}")
-              qc.rcccx(controls[i*2],controls[i*2+1],controls[i*2+2],ancilla[i])
-              num_remaining_controls-=3
-          elif(num_remaining_controls>2):
-              # print(f"RTOF: a{i-1},c{i*2+1},c{i*2+2}-->a{i}")
-              qc.rcccx(ancilla[i-1],controls[i*2+1],controls[i*2+2],ancilla[i])
-              num_remaining_controls-=2
-          elif(num_remaining_controls==2):
-              # print(f"RTOF: a{i-1},c{i*2+1},c{i*2+2}-->tar")
-              for t in range(num_targets):
-                qc.rcccx(ancilla[i-1],controls[i*2+1],controls[i*2+2],target[t])
-              num_remaining_controls-=2
-          elif(num_remaining_controls==1):
-              # print(f"ccx:  a{i-1},c{num_controls-1}-->tar")
-              for t in range(num_targets):
-                qc.rccx(ancilla[i-1],controls[num_controls-1],target[t])
-              num_remaining_controls-=1
-          i+=1
-      if(clean_ancilla):
-          i=0
-          num_remaining_controls= num_controls
-          qc_temp=qc.copy_empty_like()
-          while (num_remaining_controls>2):
-            if(i==0):
-                qc_temp.rcccx(controls[i*2],controls[i*2+1],controls[i*2+2],ancilla[i])
-                num_remaining_controls-=3
-            elif(num_remaining_controls>2):
-                qc_temp.rcccx(ancilla[i-1],controls[i*2+1],controls[i*2+2],ancilla[i])
-                num_remaining_controls-=2
-            i+=1
-          qc_temp=qc_temp.inverse()
-          qc.compose(qc_temp,inplace=True)
-
-    qc.name=f"({num_controls})RTOF-{'CLEAN' if clean_ancilla else ''}"
-    return qc.to_instruction()
-
-    
-def process_excel_file(excel_filepath):
-    """
-    Reads an Excel file row by row, converts concatenated column binary strings
-    to decimal, and returns the decimal values along with column names and their
-    maximum bit widths.
-
-    Args:
-        excel_filepath (str): The path to the Excel file.
-
-    Returns:
-        tuple: A tuple containing:
-            - list: A list of decimal values for each row.
-            - list: A list of column names.
-            - list: A list of tuples, where each tuple is (column_name, max_bit_width).
-    """
-    df = pd.read_excel(excel_filepath)
-
-    decimal_values = []
-    column_names = df.columns.tolist()
-    column_bit_widths = {}
-
-    # Determine the maximum bit width for each column
-    for col in column_names:
-        # Convert column data to string to handle potential non-numeric types
-        col_data_str = df[col].astype(str)
-        # Find the maximum length of the string representation of column values
-        max_len = col_data_str.str.len().max()
-        # Assuming each character represents a bit in the binary string
-        column_bit_widths[col] = max_len if pd.notna(max_len) else 0
-
-
-    for index, row in df.iterrows():
-        binary_string = ""
-        for col in column_names:
-            # Convert each cell value to a string and append it to the binary string
-            # Ensure that NaNs are treated as empty strings or handle as appropriate
-            cell_value_str = str(row[col]) if pd.notna(row[col]) else ""
-            binary_string += cell_value_str
-
-        # Convert the concatenated binary string to decimal
+def remove_results():
+    directory = './'
+    pattern = os.path.join(directory, '*result*.png')
+    for file_path in glob.glob(pattern):
         try:
-            decimal_value = int(binary_string, 2)
-            decimal_values.append(decimal_value)
-        except ValueError:
-            # Handle cases where the concatenated string is not a valid binary string
-            print(f"Warning: Skipping row {index+2} due to invalid binary string: '{binary_string}'")
-            decimal_values.append(None) # Or some other indicator for invalid data
-
-    # Create the list of tuples for column names and max bit widths
-    column_max_bit_widths_list = [(col, width) for col, width in column_bit_widths.items()]
+            os.remove(file_path)
+            # print(f"Deleted: {file_path}") # Don't print in Streamlit on every rerun
+        except Exception as e:
+            st.warning(f"Error deleting {file_path}: {e}") # Use st.warning for Streamlit
 
 
-    return decimal_values, column_names, column_max_bit_widths_list
+# Step 1: Load Excel file
+st.header("### Step 1: Upload Excel File")
+upload_btn = st.file_uploader("Upload dataset .xlsx", type=['xlsx'])
 
+if upload_btn is not None:
+    # Save uploaded file temporarily to process it with pandas
+    file_path = os.path.join("./temp_upload", upload_btn.name)
+    os.makedirs("./temp_upload", exist_ok=True) # Ensure dir exists
+    with open(file_path, "wb") as f:
+        f.write(upload_btn.getbuffer())
 
-from qiskit.circuit.library import UnitaryGate
-def Classical_RAM_InterfaceGate(n,m,classical_data):
-  qc_interface= QuantumCircuit()
-  qr_AR=QuantumRegister(n,name="AR")
-  qr_DR=QuantumRegister(m,name="DR")
-  qr_Ar= QuantumRegister(n,name="Ar")
-  qr_Cd= QuantumRegister(m,name="Cd")
-  cb1=QuantumRegister(1,name="cb1")
-  cb2=QuantumRegister(1,name="cb2")
-  qr_tof_ancillae=QuantumRegister((n+m)//2-1,name="tof_ancillae")
-  qc_interface.add_register(qr_AR,qr_DR,qr_Cd,qr_Ar,cb1,cb2,qr_tof_ancillae)
+    excel_data = pd.read_excel(file_path)
+    row_count = len(excel_data)
+    rows_values, cols, col_widths = process_excel_file(file_path)
+    remove_results() # Clear previous results on new upload
 
-
-  qc_interface.x(cb2)
-  for k in range(1,len(classical_data)+1):
-    qc_interface.initialize(classical_data[k-1][0],qr_Ar)
-    qc_interface.initialize(classical_data[k-1][1],qr_Cd)
-    # Step 1
-    for i in range(n):
-      qc_interface.ccx(cb2,qr_Ar[i],qr_AR[i])
-
-    for i in range(m):
-      qc_interface.ccx(cb2,qr_Cd[i],qr_DR[i])
-
-
-    # Step 2
-    for i in range(n):
-      qc_interface.cx(qr_Ar[i],qr_AR[i])
-      qc_interface.x(qr_AR[i])
-
-    for i in range(m):
-      qc_interface.cx(qr_Cd[i],qr_DR[i])
-      qc_interface.x(qr_DR[i])
-
-    # Step 3
-    R_ToffoliGate=Simplified_RTOF_Gate(n+m,clean_ancilla=True)
-    qc_interface.append(R_ToffoliGate,[*qr_AR,*qr_DR]+[*qr_tof_ancillae]+[*cb1])
-    # qc_interface.mcx([*qr_AR,*qr_DR],cb1)
-
-    #Step 4
-    if(k==1):
-      M=len(classical_data)
-    else:
-      M=M-1
-
-    CR_k_matrix=[[1,0,0,0],[0,1,0,0],[0,0,np.sqrt((M-1)/M),1/np.sqrt(M)],[0,0,-1/np.sqrt(M), np.sqrt((M-1)/M)]]
-    CR_k=UnitaryGate(np.array(CR_k_matrix),label="CR_k")
-    qc_interface.append(CR_k,[cb2,cb1])
-    # qc_interface.ch(cb1,cb2)
-
-    #Step 5
-    qc_interface.append(R_ToffoliGate,[*qr_AR,*qr_DR]+[*qr_tof_ancillae]+[*cb1])
-    # qc.mcx([*qr_AR,*qr_DR],cb1)
-    # controls=[*qr_AR,*qr_DR]
-
-
-    #Step 6
-    for i in range(n):
-      qc_interface.x(qr_AR[i])
-      qc_interface.cx(qr_Ar[i],qr_AR[i])
-
-    for i in range(m):
-      qc_interface.x(qr_DR[i])
-      qc_interface.cx(qr_Cd[i],qr_DR[i])
-
-    #Step 7
-    for i in range(n):
-      qc_interface.ccx(cb2,qr_Ar[i],qr_AR[i])
-
-    for i in range(m):
-      qc_interface.ccx(cb2,qr_Cd[i],qr_DR[i])
-
-    qc_interface.barrier()
-  return qc_interface.to_instruction()
-
-
-
-def encode_classical_data(qc,classical_data,qr_AR=None,qr_DR=None,qr_Ar=None,qr_Cd=None,cb1=None,cb2=None,qr_tof_ancillae=None):
-  if(qr_AR):
-    n=len(qr_AR)
-  else:
-    n=np.ceil(np.log2(len(classical_data))).astype(int)
-  if(qr_DR):
-    m=len(qr_DR)
-  else:
-    m=np.ceil(np.log2(max(classical_data,key=lambda x:x[1])[1])).astype(int)
+    st.session_state.data_properties["excel_data"] = excel_data
+    st.session_state.data_properties["rows_values"] = rows_values
+    st.session_state.data_properties["cols"] = cols
+    st.session_state.data_properties["col_widths"] = col_widths
+    st.session_state.address_choices = list(range(row_count))
     
-  if(qr_AR is None):
-    qr_AR=QuantumRegister(n,name="AR")
-    qc.add_register(qr_AR)
-  if(qr_DR is None ):
-    qr_DR=QuantumRegister(m,name="DR")
-    qc.add_register(qr_DR)
-  if(qr_Ar is None):
-    qr_Ar= QuantumRegister(n,name="Ar")
-    qc.add_register(qr_Ar)
-  if(qr_Cd is None):
-    qr_Cd= QuantumRegister(m,name="Cd")
-    qc.add_register(qr_Cd)
-  if(cb1 is None):
-    cb1=QuantumRegister(1,name="cb1")
-    qc.add_register(cb1)
-  if(cb2 is None):
-    cb2=QuantumRegister(1,name="cb2")
-    qc.add_register(cb2)
-
-  if(qr_tof_ancillae is None):
-    qr_tof_ancillae=QuantumRegister((n+m)//2-1,name="tof_ancillae")
-    qc.add_register(qr_tof_ancillae)
-  qc.append(Classical_RAM_InterfaceGate(n,m,classical_data),[*qr_AR,*qr_DR,*qr_Cd,*qr_Ar,*cb1,*cb2,*qr_tof_ancillae])
-  return qr_AR,qr_DR,qr_Ar,qr_Cd,cb1,cb2,qr_tof_ancillae
+    st.session_state.show_step2 = True # Show next steps
+    st.session_state.show_step3 = False # Hide subsequent steps on new upload
+    st.session_state.show_step4 = False
+    
+    st.subheader("Loaded Excel Data")
+    st.dataframe(excel_data, use_container_width=True)
+    st.code("classical_data = pd.read_excel(...)", language="python")
 
 
-import matplotlib.pyplot as plt
-def add_hyphens_to_bitstring(bitstring, col_widths):
-  """
-  Adds hyphens between the bitstring segments corresponding to different columns.
+# Step 2: Classical to Quantum Encoding
+if st.session_state.show_step2:
+    st.header("### Step 2: Classical to Quantum Encoding")
+    col1_s2, col2_s2 = st.columns([1, 2])
+    with col1_s2:
+        st.code("encode_classical_data_in_superposition(excel_file)", language="python")
+        if st.button("Execute Encoding"):
+            # Call your encoding function
+            excel_data = st.session_state.data_properties["excel_data"]
+            rows_values = st.session_state.data_properties["rows_values"]
+            cols = st.session_state.data_properties["cols"]
+            col_widths = st.session_state.data_properties["col_widths"]
 
-  Args:
-      bitstring (str): The concatenated binary string.
-      col_widths (list): A list of tuples, where each tuple is
-                         (column_name, bit_width) representing the bit width
-                         of each column in the original concatenated string.
+            address_qubits = np.ceil(np.log2(len(rows_values))).astype(int)
+            data_qubits = np.ceil(np.log2(np.max(rows_values))).astype(int)
+            classical_data = list(zip(range(len(rows_values)), rows_values))
+            qc = QuantumCircuit()
+            qr_AR, qr_DR, qr_Ar, qr_Cd, cb1, cb2, qr_tof_ancillae = encode_classical_data(qc, classical_data)
+            
+            cr_address = ClassicalRegister(address_qubits, name='cr_address') # Added name
+            cr_data = ClassicalRegister(data_qubits, name='cr_data') # Added name
+            cr_read_flag = ClassicalRegister(1, name='cr_read_flag') # Added name
+            qc.add_register(cr_address, cr_data, cr_read_flag)
+            qc.measure(qr_AR, cr_address)
+            qc.measure(qr_DR, cr_data)
+            
+            counts = simulate_circuit(qc)
+            plot_results(counts, "encode_data_result.png", address_qubits, data_qubits, cols, col_widths)
+            st.session_state.encoding_image = "encode_data_result.png"
+            st.session_state.show_step3 = True # Show next step
+            st.session_state.show_step4 = False # Hide subsequent steps
+            st.experimental_rerun() # Rerun to update visibility
 
-  Returns:
-      str: The bitstring with hyphens inserted.
-  """
-  formatted_bitstring = ""
-  current_index = 0
-  for col_name, width in col_widths:
-    if width > 0:
-      formatted_bitstring += bitstring[current_index : current_index + width]
-      formatted_bitstring += "-"
-      current_index += width
-  # Remove the trailing hyphen
-  return formatted_bitstring.rstrip('-')
+    with col2_s2:
+        if st.session_state.encoding_image:
+            st.image(st.session_state.encoding_image, caption="Encoding Result")
 
+# Step 3: Write into QRAM
+if st.session_state.show_step3:
+    st.header("### Step 3: Write into QRAM")
+    col1_s3, col2_s3 = st.columns([1, 2])
+    with col1_s3:
+        st.code("qram.write()", language="python")
+        if st.button("Execute Writing"):
+            excel_data = st.session_state.data_properties["excel_data"]
+            rows_values = st.session_state.data_properties["rows_values"]
+            cols = st.session_state.data_properties["cols"]
+            col_widths = st.session_state.data_properties["col_widths"]
 
-def plot_results(counts,fig_name,n,m,cols,col_widths):
-  address_qubits=n
-  data_qubits=m
-  sorted_counts = dict(sorted(counts.items(), key=lambda item: int(item[0][-address_qubits:], 2)))
-  # Prepare data for plotting
-  address_values = []
-  counts_values = []
-  for address, count in sorted_counts.items():
-      address_values.append(address)
-      counts_values.append(count)
+            address_qubits = np.ceil(np.log2(len(rows_values))).astype(int)
+            data_qubits = np.ceil(np.log2(np.max(rows_values))).astype(int)
+            classical_data = list(zip(range(len(rows_values)), rows_values))
+            qc = QuantumCircuit()
+            qr_AR, qr_DR, qr_Ar, qr_Cd, cb1, cb2, qr_tof_ancillae = encode_classical_data(qc, classical_data)
+            qram = Q1RAM(address_qubits, data_qubits, qc=qc, qr_address_bus=qr_AR, qr_data_bus=qr_DR)
+            qram.apply_write()
+            qram.Measure_Internal_Data()
 
-  # Modify x labels
-  x_labels = []
-  for address in address_values:
-      formatted_address_data = add_hyphens_to_bitstring(address[:data_qubits], col_widths)
-      # x_labels.append(f"{address[-address_qubits:]} ({address[:data_qubits]})")
-      x_labels.append(f"{address[-address_qubits:]}:({formatted_address_data})")
+            counts = simulate_circuit(qc)
+            plot_results(counts, "write_result.png", address_qubits, data_qubits, cols, col_widths)
+            st.session_state.write_image = "write_result.png"
+            st.session_state.show_step4 = True # Show next step
+            st.experimental_rerun() # Rerun to update visibility
 
-  # Create the plot
-  plt.figure(figsize=(12, 6))
-  bars = plt.bar(x_labels, counts_values)
+    with col2_s3:
+        if st.session_state.write_image:
+            st.image(st.session_state.write_image, caption="Write Result")
 
-  # Color bars with zero counts light gray
-  for i, bar in enumerate(bars):
-      if counts_values[i] == 0:
-          bar.set_color('lightgray')
+# Step 4: Read Arbitrary Address(es)
+if st.session_state.show_step4:
+    st.header("### Step 4: Read Arbitrary Address(es)")
+    col1_s4, col2_s4 = st.columns([1, 2])
+    with col1_s4:
+        # CheckboxGroup in Streamlit requires initial options
+        selected_addresses = st.multiselect(
+            label="Select Address(es)",
+            options=st.session_state.address_choices,
+            default=[] # No addresses selected by default
+        )
+        st.code("qram.read()", language="python")
+        if st.button("Execute Reading"):
+            excel_data = st.session_state.data_properties["excel_data"]
+            rows_values = st.session_state.data_properties["rows_values"]
+            cols = st.session_state.data_properties["cols"]
+            col_widths = st.session_state.data_properties["col_widths"]
 
-  # Identify and color repeated addresses
-  address_counts = {}
-  for address in address_values:
-    address_counts[address[-address_qubits:]] = address_counts.get(address[-address_qubits:], 0) + 1
-  for i, bar in enumerate(bars):
-    if address_counts[address_values[i][-address_qubits:]] > 1 and int(address_values[i][:data_qubits])==0:
-      bar.set_color('lightgray')
+            address_qubits = np.ceil(np.log2(len(rows_values))).astype(int)
+            data_qubits = np.ceil(np.log2(np.max(rows_values))).astype(int)
+            classical_data = list(zip(range(len(rows_values)), rows_values))
+            qc = QuantumCircuit()
+            qr_AR, qr_DR, qr_Ar, qr_Cd, cb1, cb2, qr_tof_ancillae = encode_classical_data(qc, classical_data)
+            qram = Q1RAM(address_qubits, data_qubits, qc=qc, qr_address_bus=qr_AR, qr_data_bus=qr_DR)
+            qram.apply_write()
+            
+            # Resetting registers as in original code
+            # Note: For mock QuantumCircuit, these resets might not do much visually
+            # but they keep the logic consistent with original.
+            qc.reset(qr_AR)
+            qc.reset(qr_DR)
+            qc.reset(qr_Ar)
+            qc.reset(qr_Cd)
+            qc.reset(cb1)
+            qc.reset(cb2)
+            qc.reset(qr_tof_ancillae)
+            
+            if len(selected_addresses) > 0:
+                qram.qc.prepare_state(indicies_to_statevector(selected_addresses), qr_AR)
+                qram.apply_read()
+            else:
+                qram.ReadAll()
 
-  # Add legend
-  light_gray_patch = plt.Rectangle((0, 0), 1, 1, fc="lightgray")
-  plt.legend([light_gray_patch], ["Empty cell value"])
+            qram.Measure()
 
-  plt.xlabel(f"Address:({'- '.join(cols)})")
-  plt.ylabel("Counts")
-  plt.title("QRAM Read Results")
-  plt.xticks(rotation=90)
-  plt.tight_layout()
-  plt.savefig(f"{fig_name}")
+            counts = simulate_circuit(qc)
+            plot_results(counts, "read_result.png", address_qubits, data_qubits, cols, col_widths)
+            st.session_state.read_image = "read_result.png"
+            st.experimental_rerun() # Rerun to update image
 
+    with col2_s4:
+        if st.session_state.read_image:
+            st.image(st.session_state.read_image, caption="Read Result")
 
-
-from qiskit import QuantumCircuit, QuantumRegister, transpile
-from qiskit_aer import AerSimulator,StatevectorSimulator
-from qiskit.visualization import plot_histogram
-def simulate_circuit(qc):
-  simulator = AerSimulator(method="matrix_product_state")
-  compiled_circuit = transpile(qc.decompose().decompose().decompose(), simulator,optimization_level=3)
-  job = simulator.run(compiled_circuit, shots=1024)
-  result = job.result()
-  counts = result.get_counts()
-  return counts
+    # Start Over button
+    if st.button("Start Over"):
+        remove_results()
+        st.session_state.show_step2 = False
+        st.session_state.show_step3 = False
+        st.session_state.show_step4 = False
+        st.session_state.data_properties = { # Reset data properties as well
+            "excel_data": None,
+            "rows_values": [],
+            "cols": [],
+            "col_widths": []
+        }
+        st.session_state.encoding_image = None
+        st.session_state.write_image = None
+        st.session_state.read_image = None
+        st.session_state.address_choices = []
+        st.experimental_rerun() # Rerun the entire app to reset
