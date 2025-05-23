@@ -72,7 +72,7 @@ if uploaded_file:
     st.dataframe(df)
 
     # Step 2: Select columns to use as data
-    cols = st.multiselect("Select numeric columns to use as data", df.columns.tolist())
+    cols = st.multiselect("Select numeric columns to use as data", list(range(len(rows_values))))
     if cols:
         try:
             # Step 3: Compute values for API
