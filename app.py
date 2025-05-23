@@ -68,9 +68,9 @@ def load_excel(file):
     global col_widths
 
 
-    excel_data = pd.read_excel(file.name)
+    excel_data = pd.read_excel(file)
     row_count = len(excel_data)
-    rows_values, cols, col_widths = process_excel_file(file.name)
+    rows_values, cols, col_widths = process_excel_file(file)
     
 
 # Step 2: Encode classical data to superposition 
