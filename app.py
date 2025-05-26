@@ -172,9 +172,12 @@ def start_over():
         del st.session_state[key]
     st.session_state.step = 1
 
-# Insert a static image in the header
-st.image("qram.png", width=120)  # Adjust the path and width as needed
-st.title("Quantum RAM Demo")
+# Insert a static image and title in the same row at the top
+header_col1, header_col2 = st.columns([5, 3])
+with header_col1:
+    st.image("qram.png", width=100)  # Adjust width as needed
+with header_col2:
+    st.title("Demo")
 
 st.button("Start Over", on_click=start_over, type="primary")
 
