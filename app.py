@@ -178,7 +178,7 @@ st.set_page_config(page_title="Q1RAM Demo", page_icon=":guardsman:", layout="wid
 col1, col2, col3 = st.columns([1, 3, 1])
 
 with col2: # Place the image in the middle column
-    st.image("qram.png", use_container_width=True)
+    st.image("qram.png", use_container_width=False)
 
 # st.image("qram.png", width=300)  # Adjust width as needed
 # with header_col2:
