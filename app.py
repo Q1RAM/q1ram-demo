@@ -175,9 +175,9 @@ def start_over():
 # Insert a static image and title in the same row at the top
 # header_col1, header_col2 = st.columns([6, 1])
 # with header_col1:
-st.image("qram.png", width=300)  # Adjust width as needed
+st.image("qram.png", use_container_width=True)  # Adjust width as needed
 # with header_col2:
-st.title("Demo")
+st.header("Demo")
 
 st.button("Start Over", on_click=start_over, type="primary")
 
@@ -198,7 +198,7 @@ if st.session_state.excel_data is not None:
     st.write("Preview:", st.session_state.excel_data)
 
 # Step 2: Encode classical data
-st.header("Step 2: Encode Classical Data")
+st.header("Step 2: Apply the Quantum Gateway System")
 encode_disabled = st.session_state.step != 2 or st.session_state.get("encode_loading", False)
 if st.button("Encode Data", disabled=encode_disabled):
     st.session_state.encode_loading = True
