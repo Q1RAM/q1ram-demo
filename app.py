@@ -184,14 +184,16 @@ with col2: # Place the image in the middle column
 # with header_col2:
 # st.header("Demo")
 
-with st.expander("About this demo", expanded=True):
+with st.expander("About this demo", expanded=False):
     st.write("""
     This demo showcases the Quantum Gateway System and QRAM (Quantum Random Access Memory) using a classical datasetin the following format:
              
-             feature1| feature2| ... | featureN| class
+             column1| column2| ... | featureN|
 
-             value1 | value2 | ... | valueN | class_value
-             
+             value1 | value2 | ... | valueN | 
+
+    The first row contains the column names, and each subsequent row contains the data values.
+    Each data value is stored at a specific address in QRAM.
     The Quantum Gateway System encodes classical data into quantum states, which are then written to and read from QRAM.
     The demo is divided into four steps:
     1. Upload an Excel file containing the dataset.
