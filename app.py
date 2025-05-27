@@ -116,7 +116,7 @@ def encode_data(shots=1024):
     counts = simulate_circuit(qc,shots=shots)
     st.session_state.encode_output = (counts, address_qubits, data_qubits, cols, col_widths)
 
-def write_qram():
+def write_qram(shots=1024):
     rows_values = st.session_state.rows_values
     cols = st.session_state.cols
     col_widths = st.session_state.col_widths
@@ -128,10 +128,10 @@ def write_qram():
     qram = Q1RAM(address_qubits, data_qubits, qc=qc, qr_address_bus=qr_AR, qr_data_bus=qr_DR)
     qram.apply_write()
     qram.Measure_Internal_Data()
-    counts = simulate_circuit(qc)
+    counts = simulate_circuit(qc,shots=shots)
     st.session_state.write_output = (counts, address_qubits, data_qubits, cols, col_widths)
 
-def read_qram(addresses):
+def read_qram(addresses,shots=1024):
     rows_values = st.session_state.rows_values
     cols = st.session_state.cols
     col_widths = st.session_state.col_widths
@@ -155,7 +155,7 @@ def read_qram(addresses):
     else:
         qram.ReadAll()
     qram.Measure()
-    counts = simulate_circuit(qc)
+    counts = simulate_circuit(qc,shots=shots)
     st.session_state.read_output = (counts, address_qubits, data_qubits, cols, col_widths)
 
 def start_over():
