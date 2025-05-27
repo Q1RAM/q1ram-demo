@@ -182,7 +182,6 @@ with col2: # Place the image in the middle column
 # with header_col2:
 # st.header("Demo")
 
-st.button("Start Over", on_click=start_over, type="primary")
 
 # Step 1: Upload Excel
 st.header("Step 1: Upload Excel File")
@@ -261,3 +260,5 @@ if st.session_state.read_output is not None:
     counts, address_qubits, data_qubits, cols, col_widths = st.session_state.read_output
     st.subheader("Read Result")
     plot_results_st(counts, address_qubits, data_qubits, cols, col_widths, bar_color='green')
+
+st.button("Start Over", on_click=start_over, type="primary")
