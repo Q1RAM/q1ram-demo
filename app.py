@@ -199,9 +199,7 @@ with st.expander("About this demo", expanded=True):
     st.write(""" This demo is built using Streamlit and Qiskit, and it allows you to visualize the results of each step in the process.""")
 # Set up the page configuration
 # Set up the matplotlib backend for Streamlit
-qiskit_matplotlib.use('streamlit')
 # Set the title of the app
-st.title("Quantum Gateway System and QRAM Demo")
 # Set the default number of shots for quantum circuit simulation
 if "num_shots" not in st.session_state:
     st.session_state.num_shots = 1024
