@@ -206,14 +206,14 @@ st.header("Step 2: Apply the Quantum Gateway System")
 st.image("./step2.png", use_container_width=True)
 encode_disabled = st.session_state.step != 2 or st.session_state.get("encode_loading", False)
 
-with st.expander(f"Simulation Parameters: shots={st.session_state.get("num_shots", 1024)}", expanded=False):
-    shots = st.number_input(
-    "Number of shots (for quantum circuit simulation):",
-    min_value=1,
-    max_value=100000,
-    value=1024,
-    step=1,
-    key="num_shots",disabled=encode_disabled)
+shots = st.number_input(
+"Number of shots (for quantum circuit simulation):",
+min_value=1,
+max_value=100000,
+value=1024,
+step=1,
+key="num_shots",disabled=encode_disabled)
+
 if st.button("Simulate Applying Quantum Gateway", disabled=encode_disabled):
     st.session_state.encode_loading = True
     with st.spinner("Applying Quantum Gateway..."):
@@ -233,10 +233,17 @@ if st.session_state.encode_output is not None:
 st.header("Step 3: Write into QRAM")
 st.image("./step3_write.png", use_container_width=True)
 write_disabled = st.session_state.step != 3 or st.session_state.get("write_loading", False)
+shots = st.number_input(
+"Number of shots (for quantum circuit simulation):",
+min_value=1,
+max_value=100000,
+value=1024,
+step=1,
+key="num_shots",disabled=write_disabled)
 if st.button("Write to QRAM", disabled=write_disabled):
     st.session_state.write_loading = True
     with st.spinner("Writing to QRAM..."):
-        write_qram()
+        write_qram(shots=st.session_state.get("num_shots", 1024))
         st.session_state.step = 4
     st.session_state.write_loading = False
 
@@ -257,13 +264,19 @@ selected_addresses = st.multiselect(
     options=address_options,
     disabled=read_disabled
 )
-
+shots = st.number_input(
+"Number of shots (for quantum circuit simulation):",
+min_value=1,
+max_value=100000,
+value=1024,
+step=1,
+key="num_shots",disabled=write_disabled)
 if st.button("Read from QRAM", disabled=read_disabled):
     st.session_state.read_loading = True
     with st.spinner("Reading from QRAM..."):
         addresses = selected_addresses if selected_addresses else []
         st.session_state.addresses = addresses
-        read_qram(addresses)
+        read_qram(addresses,shots=st.session_state.get("num_shots", 1024))
     st.session_state.read_loading = False
 
 if st.session_state.read_output is not None:
