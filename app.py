@@ -98,7 +98,7 @@ def indicies_to_statevector_st(indicies):
 
   return state_vector
 
-def encode_data():
+def encode_data(shots=1024):
     rows_values = st.session_state.rows_values
     cols = st.session_state.cols
     col_widths = st.session_state.col_widths
@@ -113,7 +113,7 @@ def encode_data():
     qc.add_register(cr_address, cr_data)
     qc.measure(qr_AR, cr_address)
     qc.measure(qr_DR, cr_data)
-    counts = simulate_circuit(qc)
+    counts = simulate_circuit(qc,shots=shots)
     st.session_state.encode_output = (counts, address_qubits, data_qubits, cols, col_widths)
 
 def write_qram():
@@ -204,15 +204,25 @@ if st.session_state.excel_data is not None:
 st.header("Step 2: Apply the Quantum Gateway System")
 st.image("./step2.png", use_container_width=True)
 encode_disabled = st.session_state.step != 2 or st.session_state.get("encode_loading", False)
-if st.button("Apply Quantum Gateway", disabled=encode_disabled):
-    st.session_state.encode_loading = True
-    with st.spinner("Applying Quantum Gateway..."):
-        try:
-            encode_data()
-            st.session_state.step = 3
-        except Exception as e:
-            st.error(f"Error during Gateway: {e}")
-    st.session_state.encode_loading = False
+col1,col2= st.columns(2)
+with col1:
+    shots = st.number_input(
+    "Number of shots (for quantum circuit simulation):",
+    min_value=1,
+    max_value=100000,
+    value=1024,
+    step=1,
+    key="num_shots",disabled=encode_disabled)
+with col2:
+    if st.button("Apply Quantum Gateway", disabled=encode_disabled):
+        st.session_state.encode_loading = True
+        with st.spinner("Applying Quantum Gateway..."):
+            try:
+                encode_data(shots=st.session_state.get("num_shots", 1024))
+                st.session_state.step = 3
+            except Exception as e:
+                st.error(f"Error during Gateway: {e}")
+        st.session_state.encode_loading = False
 
 if st.session_state.encode_output is not None:
     counts, address_qubits, data_qubits, cols, col_widths = st.session_state.encode_output
