@@ -204,7 +204,7 @@ if st.session_state.excel_data is not None:
 st.header("Step 2: Apply the Quantum Gateway System")
 st.image("./step2.png", use_container_width=True)
 encode_disabled = st.session_state.step != 2 or st.session_state.get("encode_loading", False)
-col1,col2= st.columns(3)
+col1,col2,col3= st.columns(3)
 with col1:
     st.markdown("Number of shots (for quantum circuit simulation):")
 with col2:
