@@ -172,7 +172,7 @@ def start_over():
         del st.session_state[key]
     st.session_state.step = 1
     st.rerun()
-st.set_page_config(page_title="Q1RAM Demo", page_icon=":guardsman:", layout="wide")
+st.set_page_config(page_title="Q1RAM Demo", page_icon=":guardsman:")
 
 # Insert a static image and title in the same row at the top
 col1, col2, col3 = st.columns([1, 3, 1])
@@ -187,10 +187,10 @@ with col2: # Place the image in the middle column
 with st.expander("About this demo", expanded=False):
     st.write("""
     This demo showcases the Quantum Gateway System and QRAM (Quantum Random Access Memory) using a classical datasetin the following format:
-             
-             column1| column2| ... | featureN|
+    
+        column1| column2| ... | columnN|
 
-             value1 | value2 | ... | valueN | 
+        value1 | value2 | ... | valueN | 
 
     The first row contains the column names, and each subsequent row contains the data values.
     Each data value is stored at a specific address in QRAM.
