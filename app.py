@@ -204,19 +204,19 @@ if st.session_state.excel_data is not None:
 st.header("Step 2: Apply the Quantum Gateway System")
 st.image("./step2.png", use_container_width=True)
 encode_disabled = st.session_state.step != 2 or st.session_state.get("encode_loading", False)
-if st.button("Encode Data", disabled=encode_disabled):
+if st.button("Apply Quantum Gateway", disabled=encode_disabled):
     st.session_state.encode_loading = True
-    with st.spinner("Encoding data..."):
+    with st.spinner("Applying Quantum Gateway..."):
         try:
             encode_data()
             st.session_state.step = 3
         except Exception as e:
-            st.error(f"Error during encoding: {e}")
+            st.error(f"Error during Gateway: {e}")
     st.session_state.encode_loading = False
 
 if st.session_state.encode_output is not None:
     counts, address_qubits, data_qubits, cols, col_widths = st.session_state.encode_output
-    st.subheader("Encoding Result")
+    st.subheader("Quantum Gateway Result")
     plot_results_st(counts, address_qubits, data_qubits, cols, col_widths, bar_color='blue')
 
 # Step 3: Write into QRAM
