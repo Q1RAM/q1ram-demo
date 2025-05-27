@@ -187,8 +187,11 @@ with col2: # Place the image in the middle column
 with st.expander("About this demo", expanded=True):
     st.write("""
     This demo showcases the Quantum Gateway System and QRAM (Quantum Random Access Memory) using a classical datasetin the following format:
+             
              feature1| feature2| ... | featureN| class
+
              value1 | value2 | ... | valueN | class_value
+             
     The Quantum Gateway System encodes classical data into quantum states, which are then written to and read from QRAM.
     The demo is divided into four steps:
     1. Upload an Excel file containing the dataset.
@@ -206,7 +209,7 @@ if "num_shots" not in st.session_state:
 # Add a number input for the number of shots
 st.sidebar.header("Settings")
 st.sidebar.write("Adjust the number of shots for quantum circuit simulation:")
-shots = st.number_input("Number of shots (for quantum circuit simulation):",min_value=1,max_value=100000,value=1024,step=1,key="num_shots")
+shots = st.sidebar.number_input("Number of shots (for quantum circuit simulation):",min_value=1,max_value=100000,value=1024,step=1,key="num_shots")
 
 # Step 1: Upload Excel
 st.header("Step 1: Upload Excel File")
