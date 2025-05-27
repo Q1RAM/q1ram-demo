@@ -175,7 +175,7 @@ def start_over():
 # Insert a static image and title in the same row at the top
 # header_col1, header_col2 = st.columns([6, 1])
 # with header_col1:
-st.image("qram.png", use_container_width=True)  # Adjust width as needed
+st.image("qram.png", width=300)  # Adjust width as needed
 # with header_col2:
 st.header("Demo")
 
