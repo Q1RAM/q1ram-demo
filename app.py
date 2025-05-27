@@ -204,17 +204,19 @@ if st.session_state.excel_data is not None:
 st.header("Step 2: Apply the Quantum Gateway System")
 st.image("./step2.png", use_container_width=True)
 encode_disabled = st.session_state.step != 2 or st.session_state.get("encode_loading", False)
-col1,col2= st.columns(2)
+col1,col2= st.columns(3)
 with col1:
+    st.markdown("Number of shots (for quantum circuit simulation):")
+with col2:
     shots = st.number_input(
-    "Number of shots (for quantum circuit simulation):",
+    "",
     min_value=1,
     max_value=100000,
     value=1024,
     step=1,
     key="num_shots",disabled=encode_disabled)
-with col2:
-    if st.button("Apply Quantum Gateway", disabled=encode_disabled):
+with col3:
+    if st.button("Simulate Applying Quantum Gateway", disabled=encode_disabled):
         st.session_state.encode_loading = True
         with st.spinner("Applying Quantum Gateway..."):
             try:
