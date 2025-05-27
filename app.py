@@ -171,6 +171,7 @@ def start_over():
     for key in list(st.session_state.keys()):
         del st.session_state[key]
     st.session_state.step = 1
+    st.rerun()
 
 # Insert a static image and title in the same row at the top
 col1, col2, col3 = st.columns([1, 3, 1])
@@ -204,10 +205,9 @@ if st.session_state.excel_data is not None:
 st.header("Step 2: Apply the Quantum Gateway System")
 st.image("./step2.png", use_container_width=True)
 encode_disabled = st.session_state.step != 2 or st.session_state.get("encode_loading", False)
-col1,col2,col3= st.columns(3)
-with col1:
+
+with st.expander(f"Simulation Parameters: shots={st.session_state.get("num_shots", 1024)}", expanded=False)
     st.markdown("Number of shots (for quantum circuit simulation):")
-with col2:
     shots = st.number_input(
     "",
     min_value=1,
@@ -215,16 +215,15 @@ with col2:
     value=1024,
     step=1,
     key="num_shots",disabled=encode_disabled)
-with col3:
-    if st.button("Simulate Applying Quantum Gateway", disabled=encode_disabled):
-        st.session_state.encode_loading = True
-        with st.spinner("Applying Quantum Gateway..."):
-            try:
-                encode_data(shots=st.session_state.get("num_shots", 1024))
-                st.session_state.step = 3
-            except Exception as e:
-                st.error(f"Error during Gateway: {e}")
-        st.session_state.encode_loading = False
+if st.button("Simulate Applying Quantum Gateway", disabled=encode_disabled):
+    st.session_state.encode_loading = True
+    with st.spinner("Applying Quantum Gateway..."):
+        try:
+            encode_data(shots=st.session_state.get("num_shots", 1024))
+            st.session_state.step = 3
+        except Exception as e:
+            st.error(f"Error during Gateway: {e}")
+    st.session_state.encode_loading = False
 
 if st.session_state.encode_output is not None:
     counts, address_qubits, data_qubits, cols, col_widths = st.session_state.encode_output
