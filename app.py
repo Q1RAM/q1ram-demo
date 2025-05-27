@@ -206,10 +206,9 @@ st.header("Step 2: Apply the Quantum Gateway System")
 st.image("./step2.png", use_container_width=True)
 encode_disabled = st.session_state.step != 2 or st.session_state.get("encode_loading", False)
 
-with st.expander(f"Simulation Parameters: shots={st.session_state.get("num_shots", 1024)}", expanded=False)
-    st.markdown("Number of shots (for quantum circuit simulation):")
+with st.expander(f"Simulation Parameters: shots={st.session_state.get("num_shots", 1024)}", expanded=False):
     shots = st.number_input(
-    "",
+    "Number of shots (for quantum circuit simulation):",
     min_value=1,
     max_value=100000,
     value=1024,
