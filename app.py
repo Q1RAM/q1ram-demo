@@ -176,7 +176,7 @@ def start_over():
 col1, col2, col3 = st.columns([1, 3, 1])
 
 with col2: # Place the image in the middle column
-    st.image("qram.png", caption='Demo of writing a dataset into Q1RAM, a novel quantum random access memory with arbitrary address query complexity of O(1)', use_container_width=True)
+    st.image("qram.png", use_container_width=True)
 
 # st.image("qram.png", width=300)  # Adjust width as needed
 # with header_col2:
@@ -186,6 +186,7 @@ st.button("Start Over", on_click=start_over, type="primary")
 
 # Step 1: Upload Excel
 st.header("Step 1: Upload Excel File")
+st.image("./step1_loading_dataset.png", use_container_width=True)
 uploaded_file = st.file_uploader("Choose an Excel file", type=["xlsx"], disabled=st.session_state.step > 1)
 if uploaded_file is not None and st.session_state.step == 1:
     # Optionally save the uploaded file to disk for deletion later
@@ -202,6 +203,7 @@ if st.session_state.excel_data is not None:
 
 # Step 2: Encode classical data
 st.header("Step 2: Apply the Quantum Gateway System")
+st.image("./step2.png", use_container_width=True)
 encode_disabled = st.session_state.step != 2 or st.session_state.get("encode_loading", False)
 if st.button("Encode Data", disabled=encode_disabled):
     st.session_state.encode_loading = True
@@ -220,6 +222,7 @@ if st.session_state.encode_output is not None:
 
 # Step 3: Write into QRAM
 st.header("Step 3: Write into QRAM")
+st.image("./step3_write.png", use_container_width=True)
 write_disabled = st.session_state.step != 3 or st.session_state.get("write_loading", False)
 if st.button("Write to QRAM", disabled=write_disabled):
     st.session_state.write_loading = True
@@ -235,6 +238,7 @@ if st.session_state.write_output is not None:
 
 # Step 4: Read from QRAM
 st.header("Step 4: Read from QRAM")
+st.image("./step4_read.png", use_container_width=True)
 read_disabled = st.session_state.step != 4 or st.session_state.get("read_loading", False)
 
 row_count = len(st.session_state.rows_values) if st.session_state.rows_values else 0
