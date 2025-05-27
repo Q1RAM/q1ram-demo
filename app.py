@@ -233,13 +233,7 @@ if st.session_state.encode_output is not None:
 st.header("Step 3: Write into QRAM")
 st.image("./step3_write.png", use_container_width=True)
 write_disabled = st.session_state.step != 3 or st.session_state.get("write_loading", False)
-shots = st.number_input(
-"Number of shots (for quantum circuit simulation):",
-min_value=1,
-max_value=100000,
-value=1024,
-step=1,
-key="num_shots",disabled=write_disabled)
+shots = st.number_input("Number of shots (for quantum circuit simulation):",min_value=1,max_value=100000,value=1024,step=1,key="num_shots",disabled=write_disabled)
 if st.button("Write to QRAM", disabled=write_disabled):
     st.session_state.write_loading = True
     with st.spinner("Writing to QRAM..."):
@@ -264,13 +258,7 @@ selected_addresses = st.multiselect(
     options=address_options,
     disabled=read_disabled
 )
-shots = st.number_input(
-"Number of shots (for quantum circuit simulation):",
-min_value=1,
-max_value=100000,
-value=1024,
-step=1,
-key="num_shots",disabled=write_disabled)
+shots = st.number_input("Number of shots (for quantum circuit simulation):",min_value=1,max_value=100000,value=1024,step=1,key="num_shots",disabled=read_disabled)
 if st.button("Read from QRAM", disabled=read_disabled):
     st.session_state.read_loading = True
     with st.spinner("Reading from QRAM..."):
