@@ -257,7 +257,7 @@ st.image("./step3_write.png", use_container_width=True)
 write_disabled = st.session_state.step != 3 or st.session_state.get("write_loading", False)
 if st.button("Write to QRAM", disabled=write_disabled):
     st.session_state.write_loading = True
-    with st.spinner("Writing to QRAM..."):
+    with st.spinner("Simulate Writing to QRAM..."):
         write_qram(shots=st.session_state.get("num_shots", 1024))
         st.session_state.step = 4
     st.session_state.write_loading = False
@@ -279,7 +279,7 @@ selected_addresses = st.multiselect(
     options=address_options,
     disabled=read_disabled
 )
-if st.button("Read from QRAM", disabled=read_disabled):
+if st.button("Simulate Read from QRAM", disabled=read_disabled):
     st.session_state.read_loading = True
     with st.spinner("Reading from QRAM..."):
         addresses = selected_addresses if selected_addresses else []
@@ -292,4 +292,4 @@ if st.session_state.read_output is not None:
     st.subheader("Read Result")
     plot_results_st(counts, address_qubits, data_qubits, cols, col_widths, bar_color='green')
 
-st.button("Start Over", on_click=start_over, type="primary")
+# st.button("Start Over", on_click=start_over, type="primary")
