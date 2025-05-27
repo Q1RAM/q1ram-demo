@@ -173,9 +173,12 @@ def start_over():
     st.session_state.step = 1
 
 # Insert a static image and title in the same row at the top
-# header_col1, header_col2 = st.columns([6, 1])
-# with header_col1:
-st.image("qram.png", width=300)  # Adjust width as needed
+col1, col2, col3 = st.columns([1, 3, 1])
+
+with col2: # Place the image in the middle column
+    st.image("qram.png", caption='Q1RAM', use_container_width=True)
+
+# st.image("qram.png", width=300)  # Adjust width as needed
 # with header_col2:
 st.header("Demo")
 
