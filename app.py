@@ -173,11 +173,11 @@ def start_over():
     st.session_state.step = 1
 
 # Insert a static image and title in the same row at the top
-header_col1, header_col2 = st.columns([6, 1])
-with header_col1:
-    st.image("qram.png", width=300)  # Adjust width as needed
-with header_col2:
-    st.title("Demo")
+# header_col1, header_col2 = st.columns([6, 1])
+# with header_col1:
+st.image("qram.png", width=300)  # Adjust width as needed
+# with header_col2:
+st.title("Demo")
 
 st.button("Start Over", on_click=start_over, type="primary")
 
