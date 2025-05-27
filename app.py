@@ -183,6 +183,32 @@ with col2: # Place the image in the middle column
 # with header_col2:
 # st.header("Demo")
 
+with st.expander("About this demo", expanded=True):
+    st.write("""
+    This demo showcases the Quantum Gateway System and QRAM (Quantum Random Access Memory) using a classical datasetin the following format:
+             feature1| feature2| ... | featureN| class
+             value1 | value2 | ... | valueN | class_value
+    The Quantum Gateway System encodes classical data into quantum states, which are then written to and read from QRAM.
+    The demo is divided into four steps:
+    1. Upload an Excel file containing the dataset.
+    2. Apply the Quantum Gateway System to encode the data into quantum states.
+    3. Write the encoded quantum states into QRAM.
+    4. Read the quantum states from QRAM.
+    """)
+    st.write(""" This demo is built using Streamlit and Qiskit, and it allows you to visualize the results of each step in the process.""")
+# Set up the page configuration
+st.set_page_config(page_title="Q1RAM Demo", page_icon=":guardsman:", layout="wide")
+# Set up the matplotlib backend for Streamlit
+qiskit_matplotlib.use('streamlit')
+# Set the title of the app
+st.title("Quantum Gateway System and QRAM Demo")
+# Set the default number of shots for quantum circuit simulation
+if "num_shots" not in st.session_state:
+    st.session_state.num_shots = 1024
+# Add a number input for the number of shots
+st.sidebar.header("Settings")
+st.sidebar.write("Adjust the number of shots for quantum circuit simulation:")
+shots = st.number_input("Number of shots (for quantum circuit simulation):",min_value=1,max_value=100000,value=1024,step=1,key="num_shots")
 
 # Step 1: Upload Excel
 st.header("Step 1: Upload Excel File")
@@ -206,13 +232,6 @@ st.header("Step 2: Apply the Quantum Gateway System")
 st.image("./step2.png", use_container_width=True)
 encode_disabled = st.session_state.step != 2 or st.session_state.get("encode_loading", False)
 
-shots = st.number_input(
-"Number of shots (for quantum circuit simulation):",
-min_value=1,
-max_value=100000,
-value=1024,
-step=1,
-key="num_shots",disabled=encode_disabled)
 
 if st.button("Simulate Applying Quantum Gateway", disabled=encode_disabled):
     st.session_state.encode_loading = True
@@ -233,7 +252,6 @@ if st.session_state.encode_output is not None:
 st.header("Step 3: Write into QRAM")
 st.image("./step3_write.png", use_container_width=True)
 write_disabled = st.session_state.step != 3 or st.session_state.get("write_loading", False)
-shots = st.number_input("Number of shots (for quantum circuit simulation):",min_value=1,max_value=100000,value=1024,step=1,key="num_shots",disabled=write_disabled)
 if st.button("Write to QRAM", disabled=write_disabled):
     st.session_state.write_loading = True
     with st.spinner("Writing to QRAM..."):
@@ -258,7 +276,6 @@ selected_addresses = st.multiselect(
     options=address_options,
     disabled=read_disabled
 )
-shots = st.number_input("Number of shots (for quantum circuit simulation):",min_value=1,max_value=100000,value=1024,step=1,key="num_shots",disabled=read_disabled)
 if st.button("Read from QRAM", disabled=read_disabled):
     st.session_state.read_loading = True
     with st.spinner("Reading from QRAM..."):
