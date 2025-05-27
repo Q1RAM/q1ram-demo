@@ -176,11 +176,11 @@ def start_over():
 col1, col2, col3 = st.columns([1, 3, 1])
 
 with col2: # Place the image in the middle column
-    st.image("qram.png", caption='Q1RAM', use_container_width=True)
+    st.image("qram.png", caption='Demo of writing a dataset into Q1RAM, a novel quantum random access memory with arbitrary address query complexity of O(1)', use_container_width=True)
 
 # st.image("qram.png", width=300)  # Adjust width as needed
 # with header_col2:
-st.header("Demo")
+# st.header("Demo")
 
 st.button("Start Over", on_click=start_over, type="primary")
 
