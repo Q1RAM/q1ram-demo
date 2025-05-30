@@ -59,9 +59,10 @@ def plot_results_st(counts, n, m, cols, col_widths, bar_color='blue'):
             bar.set_color('lightgray')
 
     light_gray_patch = plt.Rectangle((0, 0), 1, 1, fc="lightgray")
-    ax.legend([light_gray_patch], ["Empty cell value"])
+    # ax.legend([light_gray_patch], ["Empty cell value"])
 
-    ax.set_xlabel(f"Address:({'- '.join(cols)})")
+    # ax.set_xlabel(f"Address:({'- '.join(cols)})")
+    ax.set_xlabel(f"Address:(data)")
     ax.set_ylabel("Counts")
     ax.set_title("QRAM Read Results")
     ax.set_xticklabels(x_labels, rotation=90)
