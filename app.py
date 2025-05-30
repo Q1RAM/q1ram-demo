@@ -278,16 +278,16 @@ if st.session_state.write_output is not None:
         grouped[address].add(data)
 
     # Prepare table data (no row index)
-    table_data = {"Address": [], "Data": []}
+    table_data = {"Address": [], "Stored Base states": []}
     for address, datas in grouped.items():
         # Format address as |address>
         address_ket = f"|{address}>"
         # Format each data value as |data>
         data_kets = [f"|{d}>" for d in sorted(datas)]
         table_data["Address"].append(address_ket)
-        table_data["Data"].append(", ".join(data_kets))
+        table_data["Stored Base states"].append(", ".join(data_kets))
 
-    st.markdown("#### Address/Data Table")
+    st.markdown("#### QRAM Memory Cells")
     st.dataframe(table_data, hide_index=True)
 
 # Step 4: Read from QRAM
