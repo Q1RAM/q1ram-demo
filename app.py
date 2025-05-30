@@ -280,10 +280,12 @@ if st.session_state.write_output is not None:
     # Prepare table data (no row index)
     table_data = {"Address": [], "Data": []}
     for address, datas in grouped.items():
-        table_data["Address"].append(f"|{address}>")
-        # Join all unique data values for this address, comma-separated
-        st.write(f"Data:{datas}")
-        table_data["Data"].append(", ".join(f"|{datas}>"))
+        # Format address as |address>
+        address_ket = f"|{address}>"
+        # Format each data value as |data>
+        data_kets = [f"|{d}>" for d in sorted(datas)]
+        table_data["Address"].append(address_ket)
+        table_data["Data"].append(", ".join(data_kets))
 
     st.markdown("#### Address/Data Table")
     st.dataframe(table_data, hide_index=True)
