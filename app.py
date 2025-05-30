@@ -279,7 +279,7 @@ if st.session_state.write_output is not None:
         grouped[address].add(data)
 
     # Prepare table data (no row index)
-    table_data = {"Address": [], "Stored Base states": []}
+    table_data = {"Address": [], "Stored Basis States": []}
     for address, datas in grouped.items():
         # Format address as |address>
         address_ket = f"|{address}>"
