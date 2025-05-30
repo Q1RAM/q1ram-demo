@@ -282,7 +282,7 @@ if st.session_state.write_output is not None:
     for address, datas in grouped.items():
         table_data["Address"].append(f"|{address}>")
         # Join all unique data values for this address, comma-separated
-        table_data["Data"].append(", ".join(f"|{sorted(datas)}>"))
+        table_data["Data"].append(", ".join(sorted(datas)))
 
     st.markdown("#### Address/Data Table")
     st.dataframe(table_data, hide_index=True)
