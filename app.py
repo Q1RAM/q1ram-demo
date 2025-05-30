@@ -286,7 +286,7 @@ if st.session_state.write_output is not None:
         # Format each data value as |data>
         data_kets = [f"|{d}>" for d in sorted(datas)]
         table_data["Address"].append(address_ket)
-        table_data["Stored Base states"].append(", ".join(data_kets))
+        table_data["Stored Basis States"].append(", ".join(data_kets))
 
     st.markdown("#### QRAM Memory Cells")
     st.dataframe(table_data, hide_index=True)
