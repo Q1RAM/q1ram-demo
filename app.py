@@ -255,7 +255,7 @@ if st.session_state.encode_output is not None:
 st.header("Step 3: Write into QRAM")
 st.image("./step3_write.png", use_container_width=True)
 write_disabled = st.session_state.step != 3 or st.session_state.get("write_loading", False)
-if st.button("Write to QRAM", disabled=write_disabled):
+if st.button("Simulate Writing to QRAM", disabled=write_disabled):
     st.session_state.write_loading = True
     with st.spinner("Simulate Writing to QRAM..."):
         write_qram(shots=st.session_state.get("num_shots", 1024))
