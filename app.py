@@ -268,24 +268,24 @@ if st.session_state.write_output is not None:
     plot_results_st(counts, address_qubits, data_qubits, cols, col_widths, bar_color='red')
 
     # --- Group and display address/data table ---
-    # Group by the first address_qubits bits (address), collect data bits
+    # Group by the address bits, collect unique data bits for each address
     grouped = {}
     for key, value in counts.items():
         address = key[-address_qubits:]  # last address_qubits bits as address
         data = key[:data_qubits]         # first data_qubits bits as data
         if address not in grouped:
-            grouped[address] = []
-        grouped[address].append(data)
+            grouped[address] = set()
+        grouped[address].add(data)
 
-    # Prepare table data
+    # Prepare table data (no row index)
     table_data = {"Address": [], "Data": []}
     for address, datas in grouped.items():
-        for data in datas:
-            table_data["Address"].append(address)
-            table_data["Data"].append(data)
+        table_data["Address"].append(address)
+        # Join all unique data values for this address, comma-separated
+        table_data["Data"].append(", ".join(sorted(datas)))
 
     st.markdown("#### Address/Data Table")
-    st.table(table_data)
+    st.dataframe(table_data, hide_index=True)
 
 # Step 4: Read from QRAM
 st.header("Step 4: Read from QRAM")
