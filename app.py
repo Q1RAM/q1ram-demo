@@ -211,7 +211,7 @@ if "num_shots" not in st.session_state:
 # Add a number input for the number of shots
 st.sidebar.header("Settings")
 st.sidebar.write("Adjust the number of shots for quantum circuit simulation:")
-shots = st.sidebar.number_input("Number of shots (for quantum circuit simulation):",min_value=1,max_value=100000,value=1024,step=1,key="num_shots")
+shots = st.sidebar.number_input("Number of shots (for quantum circuit simulation):",min_value=1,max_value=100000,step=1,key="num_shots")
 
 # Step 1: Upload Excel
 st.header("Step 1: Upload Excel File")
