@@ -176,10 +176,10 @@ def start_over():
 st.set_page_config(page_title="Q1RAM Demo", page_icon=":guardsman:")
 
 # Insert a static image and title in the same row at the top
-col1, col2, col3 = st.columns([1, 3, 1])
+col1, col2, col3 = st.columns([2, 1, 2])
 
 with col2: # Place the image in the middle column
-    st.image("q1ram_logo.jpg", use_container_width=True)
+    st.image("q1ram_logo.jpg")
 
 # st.image("qram.png", width=300)  # Adjust width as needed
 # with header_col2:
