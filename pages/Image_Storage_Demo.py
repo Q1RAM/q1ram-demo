@@ -177,7 +177,11 @@ def encode_image(source_image, method, color_bit_depth,num_shots=num_shots):
     else:
         raise ValueError("Invalid method.")
     
-    qc.measure_all()
+    cr_position= QuantumRegister(len(qr_position),name="pos")
+    cr_color= QuantumRegister(len(qr_color),name="color")
+    qc.add_register(cr_position,cr_color)
+    qc.measure(qr_position,cr_position)
+    qc.measure(qr_color,cr_color)
     simulator = AerSimulator()
     qc_tc=transpile(qc,simulator,optimization_level=3)
     print(f"num shots method:{num_shots}")
