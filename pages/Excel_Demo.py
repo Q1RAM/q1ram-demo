@@ -176,9 +176,13 @@ def start_over():
 st.set_page_config(page_title="Q1RAM Demo", page_icon=":guardsman:")
 
 # Insert a static image and title in the same row at the top
-header_col1, header_col2, header_col3 = st.columns([1, 2, 1])  # Adjust column widths as needed
-with header_col1:  # Place the title in the left column
-    st.image("q1ram_logo.jpg",width=200)
+# header_col1, header_col2, header_col3 = st.columns([1, 2, 1])  # Adjust column widths as needed
+# with header_col2:  # Place the title in the left column
+st.image("q1ram_logo.jpg",width=150)
+# st.markdown("<h3 style='text-align: center; margin-top: -10px;'>Excel Demo</h3>", unsafe_allow_html=True)
+st.title("Excel Demo")
+# with header_col2:
+
 
 # st.image("qram.png", width=300)  # Adjust width as needed
 # with header_col2:
