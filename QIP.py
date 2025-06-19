@@ -106,6 +106,113 @@ def group_dict_by_prefix(input_dict: dict, k: int) -> dict:
 
     return grouped_data
 
+def implement_boolean_function_ucry(qc:QuantumCircuit,qr_controls,qr_target,truth_table):
+    non_zero_count = np.count_nonzero(truth_table)
+    # zero_count=len(truth_table)-non_zero_count
+    # if(zero_count<0.5*len(truth_table)):
+    #   qc.x(qr_target)
+    #   angles_list = np.pi*np.array(1-truth_table)
+    # else:
+    angles_list = np.pi*np.array(truth_table)
+
+    ucry= UCRYGate(angle_list=list(angles_list))
+    qubits=list(reversed([*qr_controls]))+[qr_target]
+    # qc.h(qr_controls)
+
+    qc.append(ucry,reversed(qubits))
 
 
   
+def image_to_color_truth_table(image_array, color_bits=8, rescale=False):
+    """
+    Convert a grayscale image array to a truth table of color bits for each pixel.
+
+    Args:
+        image_array (numpy.ndarray): The grayscale image array with shape (height, width).
+        color_bits (int): The number of bits to represent the color value.
+        rescale (bool): Whether to rescale color values to the full color range.
+
+    Returns:
+        numpy.ndarray: A 2D array where each row represents a pixel and each column a specific color bit.
+    """
+
+    # Flatten the image into a 1D array
+    pixel_data = image_array.flatten()
+
+    # Rescale color values if requested
+    if rescale:
+        pixel_data = (pixel_data.astype(np.float32) * (2**color_bits - 1) / 255.0).astype(np.uint8)
+    else:
+        pixel_data = pixel_data.astype(np.uint8)
+
+    # Create a truth table for each bit in the color value
+    truth_table = np.array([(pixel_data >> bit) & 1 for bit in range(color_bits)])
+
+    return truth_table
+
+def encode_color_in_position_with_UCRY(image,qc,position_register=None,color_register=None,img_index="",apply_h=True,q=8):
+    # Get the dimensions of the image
+    height, width = image.shape
+    m = int(np.log2(height))  # Assume height == width and is a power of 2
+    n = int(np.log2(width))
+
+    if(position_register is None):
+        position_register = QuantumRegister(m+n, name=f'pos_{img_index}')
+        qc.add_register(position_register)
+    if(color_register is None):
+        color_register = QuantumRegister(q, name=f'color_{img_index}')
+        qc.add_register(color_register)
+
+    qc_copy= qc.copy_empty_like()
+    qc_copy.name=f"UCRY NEQR Image {height}x{width}_POS"
+
+    if(apply_h):
+      qc_copy.h(position_register)
+
+    color_functions= image_to_color_truth_table(image,color_bits=q)
+
+    if(color_register):
+      for i, color_func in enumerate(color_functions):
+          implement_boolean_function_ucry(qc_copy,position_register,color_register[i],color_func)
+
+    PrepareGate= qc_copy.to_instruction()
+
+    qc.append(PrepareGate,range(qc.num_qubits))
+    return position_register,color_register
+
+
+def reconstruct_neqr_image(probabilities,rows_qubits, col_qubits,color_qubits, filter_probs=False):
+
+    if(filter_probs):
+      filtered_dict = {k.replace(" ",""):v for k,v in probabilities.items() }#if   v>0.0001 }
+    else:
+      filtered_dict= probabilities
+
+
+    num_rows= 2**rows_qubits
+    num_cols= 2**col_qubits
+    total_qubits=rows_qubits+col_qubits
+    # Create an empty image array
+    img_array = np.zeros((num_rows, num_cols), dtype=np.uint8)
+
+    # Iterate over the dictionary
+    for key, value in filtered_dict.items():
+        # Convert binary row and column indices to decimal
+        val=key[:color_qubits]
+        pos=key[color_qubits:]
+        col_index = int(pos[col_qubits:], 2)
+        row_index = int(pos[:rows_qubits], 2)
+        # Set the pixel value in the image array
+        # print(f"key:{key},y:{row_index},x:{col_index},color-->{val}")
+        if(int(val,2)>0):
+          img_array[row_index, col_index] =int(val,2)
+
+    # display(img_array)
+    # Convert to uint8
+    img_array = img_array.astype(np.uint8)
+
+
+    # Create grayscale image from array
+    img = Image.fromarray(img_array)
+
+    return img
