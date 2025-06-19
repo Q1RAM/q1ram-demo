@@ -194,7 +194,7 @@ def encode_image(source_image, method, color_bit_depth,num_shots=num_shots):
         return decode_frqi_image_aer(probabilities, n_w)
     elif method == "NEQR":
         n_h = int(np.ceil(np.log2(h)))
-        return reconstruct_neqr_image(probabilities, n_h, n_w, color_bit_depth)
+        return reconstruct_neqr_image(probabilities, n_h, n_w, color_bit_depth,filter_probs=True)
 
 # ---- Helper: Write to QRAM ----
 def write_image(source_image, method="FRQI", color_bit_depth=4, num_shots=1024):
