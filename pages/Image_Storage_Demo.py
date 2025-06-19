@@ -131,7 +131,7 @@ import streamlit as st
 import numpy as np
 import matplotlib.pyplot as plt
 from PIL import Image
-from qiskit import QuantumCircuit, QuantumRegister, transpile
+from qiskit import QuantumCircuit, QuantumRegister, transpile,ClassicalRegister
 from qiskit_aer import AerSimulator
 
 from Q1RAM import Q1RAM
@@ -177,8 +177,8 @@ def encode_image(source_image, method, color_bit_depth,num_shots=num_shots):
     else:
         raise ValueError("Invalid method.")
     
-    cr_position= QuantumRegister(len(qr_position),name="pos")
-    cr_color= QuantumRegister(len(qr_color),name="color")
+    cr_position= ClassicalRegister(len(qr_position),name="pos")
+    cr_color= ClassicalRegister(len(qr_color),name="color")
     qc.add_register(cr_position,cr_color)
     qc.measure(qr_position,cr_position)
     qc.measure(qr_color,cr_color)
