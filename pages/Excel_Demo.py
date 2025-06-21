@@ -188,7 +188,7 @@ st.title("Excel Demo")
 # with header_col2:
 # st.header("Demo")
 
-with st.expander("About this demo", expanded=False):
+with st.expander("Help to try this demo", expanded=False):
     st.write("""
     This demo showcases the Quantum Gateway System and QRAM (Quantum Random Access Memory) using a classical datasetin the following format:
     
@@ -218,7 +218,7 @@ st.sidebar.write("Adjust the number of shots for quantum circuit simulation:")
 shots = st.sidebar.number_input("Number of shots (for quantum circuit simulation):",min_value=1,max_value=100000,step=1,key="num_shots")
 
 # Step 1: Upload Excel
-st.header("Step 1: Upload Excel File")
+st.header("Step 1: Upload your dataset as an Excel file")
 st.image("./step1_loading_dataset.png", use_container_width=True)
 uploaded_file = st.file_uploader("Choose an Excel file", type=["xlsx"], disabled=st.session_state.step > 1)
 if uploaded_file is not None and st.session_state.step == 1:
@@ -236,6 +236,7 @@ if st.session_state.excel_data is not None:
 
 # Step 2: Encode classical data
 st.header("Step 2: Apply the Quantum Gateway System")
+st.markdown("This step is required to uplod the dataset from the classical RAM to the quantum address bus |AR> and the quantum data bus |DR>")
 st.image("./step2.png", use_container_width=True)
 encode_disabled = st.session_state.step != 2 or st.session_state.get("encode_loading", False)
 
@@ -319,4 +320,7 @@ if st.session_state.read_output is not None:
     st.subheader("Read Result")
     plot_results_st(counts, address_qubits, data_qubits, cols, col_widths, bar_color='green')
 
-# st.button("Start Over", on_click=start_over, type="primary")
+st.markdown("---")
+col1,col2,col3= st.columns([1,3,1])
+with col2:
+    st.button("👉 Subscribe here to integrate QRAM in your system")
