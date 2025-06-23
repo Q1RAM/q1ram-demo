@@ -78,6 +78,13 @@ st.write("This demo showcases how to encode a grayscale image and store it in QR
 # Step 1: Upload image
 st.subheader("Step 1: Upload a grayscale image into classical RAM")
 st.image("image_demo_files//step1.png")
+code_snippet = """
+from QIP.utils import load_image
+
+source_image = load_image(path,target_size=(32, 32))
+"""
+
+st.code(code_snippet, language="python",line_numbers=True)
 uploaded_file = st.file_uploader("Step 1: Upload grayscale image", type=["png", "jpg", "jpeg"])
 if uploaded_file:
     from PIL import Image
@@ -93,6 +100,15 @@ if uploaded_file:
 # Step 2: Encode Image
 st.subheader("Step 2: Quantum image Encoding System")
 st.markdown("This step is required to load the image from classical RAM into the quantum data bus |DR>")
+code_snippet = """
+from QIP.representations import FRQIRepresentation
+
+frqi_image = FRQIRepresentation.from_image(source_image,target_size=(32, 32))
+                                .apply_encoding()
+                                .measure()
+"""
+
+st.code(code_snippet, language="python",line_numbers=True)
 st.image("image_demo_files//step2.png")
 if st.session_state.source_image is not None:
     if st.button("Step 2: Encode Image"):
@@ -113,6 +129,16 @@ if st.session_state.source_image is not None:
 # Step 3: Write to QRAM
 st.header("Step 3: Write to QRAM and Decode")
 st.image("image_demo_files//step3.png")
+code_snippet = """
+from Q1RAM import QRAM
+qr_address_bus= QuantumRegister(1,name="qr_address")
+qr_data_bus=[*frqi_image.qr_position,*frqi_image.qr_color]
+qram= QRAM(circuit=qc,address_bus=qr_address_bus, data_bus=qr_data_bus)
+qram.apply_write()
+qram.measure_internal()
+"""
+
+st.code(code_snippet, language="python",line_numbers=True)
 if st.session_state.source_image is not None:
     if st.button("Step 3: Write to QRAM and Decode"):
         st.session_state.qram_images = write_image(st.session_state.source_image)

@@ -298,6 +298,7 @@ if st.session_state.write_output is not None:
 # Step 4: Read from QRAM
 st.header("Step 4: Read from QRAM")
 st.image("./step4_read.png", use_container_width=True)
+
 read_disabled = st.session_state.step != 4 or st.session_state.get("read_loading", False)
 
 row_count = len(st.session_state.rows_values) if st.session_state.rows_values else 0
