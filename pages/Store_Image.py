@@ -156,7 +156,7 @@ if st.session_state.source_image is not None:
 st.markdown("---")
 col1,col2,col3= st.columns([1,3,1])
 with col2:
-    st.button("👉 Subscribe here to integrate QRAM in your system")
+    st.link_button("👉 Subscribe here to integrate QRAM in your system","https://lab.q1ram.com")
 # import streamlit as st
 # import numpy as np
 # import matplotlib.pyplot as plt

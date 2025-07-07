@@ -27,7 +27,7 @@ st.markdown("""
 ### Transfer your  dataset from classical RAM to QRAM
 Upload your dataset as an Excel sheet file. Then, you can use this demo to load the dataset from classical RAM to QRAM through our developed quantum gateway system. Therefore you can proceeed through this demo to write the dataset from classical RAM to QRAM, and to read the quantum data from QRAM using quantum computer simulator.
 """)
-st.page_link("pages/Excel_Demo.py", label=" # Open Demo Page")
+st.page_link("pages/Store_Dataset.py", label=" # Open Demo Page")
 
 st.markdown("---")
 st.markdown("""
@@ -45,7 +45,7 @@ st.markdown("""
 col1, col2 = st.columns([1, 16])  # Left spacer, content column
 
 with col2:
-    st.page_link("pages/Image_Storage_Demo.py", label="📷 Open Demo Page")
+    st.page_link("pages/Store_Image.py", label="📷 Open Demo Page")
 
 # st.markdown("---")
 # st.markdown("""

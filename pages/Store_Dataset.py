@@ -180,7 +180,7 @@ st.set_page_config(page_title="Q1RAM Demo", page_icon=":guardsman:")
 # with header_col2:  # Place the title in the left column
 st.image("q1ram_logo.jpg",width=150)
 # st.markdown("<h3 style='text-align: center; margin-top: -10px;'>Excel Demo</h3>", unsafe_allow_html=True)
-st.title("Excel Demo")
+st.title("Store dataset in QRAM")
 # with header_col2:
 
 
@@ -324,4 +324,4 @@ if st.session_state.read_output is not None:
 st.markdown("---")
 col1,col2,col3= st.columns([1,3,1])
 with col2:
-    st.button("👉 Subscribe here to integrate QRAM in your system")
+    st.link_button("👉 Subscribe here to integrate QRAM in your system","https://lab.q1ram.com")
