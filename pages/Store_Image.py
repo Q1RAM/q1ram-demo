@@ -57,7 +57,7 @@ def write_image(source_image):
     return {k: decode_frqi_image_aer(probs, n_w) for k, probs in images_probs.items()}
 
 # --- Streamlit UI with Session State ---
-st.set_page_config(page_title="QRAM Image Demo", layout="centered")
+st.set_page_config(page_title="Store Image in Q1RAM", layout="centered")
 # st.title("Quantum Image Processing with QRAM")
 
 # Init session state
@@ -71,7 +71,7 @@ if "qram_images" not in st.session_state:
 # cols= st.columns(3)
 # with cols[1]:
 st.image("q1ram_logo.jpg", width=150)
-st.title("Image Demo")
+st.title("Store Image in QRAM")
 st.write("This demo showcases how to encode a grayscale image and store it in QRAM. "
          "You can upload a grayscale image, encode it, and then write it to QRAM for further processing.")
 

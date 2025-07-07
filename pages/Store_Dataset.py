@@ -173,14 +173,14 @@ def start_over():
         del st.session_state[key]
     st.session_state.step = 1
     st.rerun()
-st.set_page_config(page_title="Q1RAM Demo", page_icon=":guardsman:")
+st.set_page_config(page_title="Store Dataset in Q1RAM")
 
 # Insert a static image and title in the same row at the top
 # header_col1, header_col2, header_col3 = st.columns([1, 2, 1])  # Adjust column widths as needed
 # with header_col2:  # Place the title in the left column
 st.image("q1ram_logo.jpg",width=150)
 # st.markdown("<h3 style='text-align: center; margin-top: -10px;'>Excel Demo</h3>", unsafe_allow_html=True)
-st.title("Store dataset in QRAM")
+st.title("Store Dataset in QRAM")
 # with header_col2:
 
 
